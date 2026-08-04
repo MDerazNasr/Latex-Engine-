@@ -1,0 +1,12 @@
+[package]
+name = "latex-segmenter"
+description = "Streaming Markdown-aware LaTeX math segmentation for Codex clients"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[lints]
+workspace = true
+
