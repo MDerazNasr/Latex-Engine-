@@ -28,7 +28,7 @@ impl Default for Segmenter {
 }
 
 impl Segmenter {
-    /// Creates a segmenter with conservative single-dollar recognition.
+    /// Creates a segmenter with conservative single dollar recognition.
     pub fn new() -> Self {
         Self::with_config(SegmenterConfig::default())
     }
@@ -47,7 +47,7 @@ impl Segmenter {
         }
     }
 
-    /// Consumes one valid UTF-8 stream chunk and returns stable completed segments.
+    /// Consumes one valid UTF 8 stream chunk and returns stable completed segments.
     pub fn push(&mut self, chunk: &str) -> Vec<Segment> {
         self.pending.push_str(chunk);
         self.process(false)

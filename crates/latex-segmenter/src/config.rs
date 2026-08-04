@@ -6,7 +6,7 @@ pub enum InlineDollarMode {
     /// Apply conservative currency and whitespace checks.
     #[default]
     Smart,
-    /// Treat a single dollar followed by non-whitespace as an opener.
+    /// Treat a single dollar followed by a nonwhitespace character as an opener.
     Always,
 }
 

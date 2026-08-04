@@ -31,7 +31,7 @@ pub enum SegmentKind {
 pub struct Segment {
     /// The semantic role of this segment.
     pub kind: SegmentKind,
-    /// The exact original bytes represented as valid UTF-8.
+    /// The exact original bytes represented as valid UTF 8.
     pub source: String,
     /// Inner math or code content without delimiters, or the text itself.
     pub content: String,
