@@ -1,5 +1,5 @@
 [workspace]
-members = ["crates/latex-segmenter"]
+members = ["crates/latex-segmenter", "crates/latex-terminal"]
 resolver = "2"
 
 [workspace.package]
@@ -17,4 +17,3 @@ unsafe_code = "forbid"
 dbg_macro = "deny"
 todo = "deny"
 undocumented_unsafe_blocks = "deny"
-
