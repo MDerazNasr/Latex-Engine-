@@ -17,8 +17,10 @@ inspection confirmed rendering and normal cleanup. Automated process tests prove
 direct transfer, local-file transfer, replacement on resize, targeted deletion,
 cursor restoration, alternate-screen restoration, and redirected source fallback.
 
-No Kitty or WezTerm application is installed in this environment, so a second
-real-terminal visual check remains open even though its wire protocol is covered.
+The same equation also rendered successfully through direct PNG transfer in Kitty
+0.47.0. A post-run iTerm2 capture confirmed targeted deletion and alternate-screen
+restoration. Kitty lifecycle cleanup remains covered by process-level command tests
+because its validation window deliberately preserved the last child screen.
 
 ## Decision
 
@@ -31,8 +33,8 @@ boundary. During upstream integration, extract the equivalent Codex pet code int
 a shared private module and adapt this repository's renderer through a narrow TUI
 adapter.
 
-Treat the remaining Kitty or WezTerm visual check as a Phase 0 exit item that must
-be completed before beta, not as a reason to delay the renderer core.
+Treat both verified transports as the Phase 0 reference backends. Other terminals
+remain source fallback until they pass the compatibility matrix.
 
 ## Consequences
 
@@ -43,5 +45,5 @@ be completed before beta, not as a reason to delay the renderer core.
   TUI design work.
 - Direct placement is proven for the spike; Kitty Unicode placeholders remain a
   Phase 2 experiment for scrollback-native positioning.
-- The project records a conditional Phase 0 go decision with one hardware-style
-  compatibility check still outstanding.
+- The project records a Phase 0 go decision backed by two real macOS terminal
+  validations.

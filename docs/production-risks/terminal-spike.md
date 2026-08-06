@@ -49,4 +49,5 @@ the process recovery model and must rely on terminal reset behavior.
 - A local-file image must remain present until the terminal consumes it.
 - tmux and Zellij stay on source fallback until pane-local behavior is proven.
 - The Quick Look rasterizer is a macOS-only spike tool and cannot enter production.
-- A second real Kitty or WezTerm visual validation remains required before beta.
+- Kitty direct transfer and iTerm2 local-file transfer are the two validated macOS
+  reference paths; other paths remain fallback until tested.
