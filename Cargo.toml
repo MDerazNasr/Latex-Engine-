@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "crates/latex-render-client",
     "crates/latex-render-core",
     "crates/latex-segmenter",
     "crates/latex-terminal",
