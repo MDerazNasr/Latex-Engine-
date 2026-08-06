@@ -1,5 +1,9 @@
 [workspace]
-members = ["crates/latex-segmenter", "crates/latex-terminal"]
+members = [
+    "crates/latex-render-core",
+    "crates/latex-segmenter",
+    "crates/latex-terminal",
+]
 resolver = "2"
 
 [workspace.package]
