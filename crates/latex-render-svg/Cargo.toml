@@ -1,0 +1,17 @@
+[package]
+name = "latex-render-svg"
+description = "Fail closed SVG allowlist and deterministic PNG rasterization"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[dependencies]
+latex-render-core = { path = "../latex-render-core" }
+quick-xml = "=0.41.0"
+resvg = { version = "=0.48.1", default-features = false }
+tiny-skia = { version = "=0.12.0", default-features = false, features = ["png-format"] }
+
+[lints]
+workspace = true
