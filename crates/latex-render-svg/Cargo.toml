@@ -11,6 +11,7 @@ version.workspace = true
 latex-render-core = { path = "../latex-render-core" }
 quick-xml = "=0.41.0"
 resvg = { version = "=0.48.1", default-features = false }
+svgtypes = "=0.16.1"
 tiny-skia = { version = "=0.12.0", default-features = false, features = ["png-format"] }
 
 [lints]

@@ -216,6 +216,7 @@ dependencies = [
  "latex-render-core",
  "quick-xml",
  "resvg",
+ "svgtypes",
  "tiny-skia",
 ]
 
