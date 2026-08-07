@@ -279,6 +279,7 @@ Proposed layout:
 │   ├── latex-segmenter/       # streaming, Markdown-aware detection
 │   ├── latex-render-core/     # requests, results, limits, cache keys
 │   ├── latex-render-client/   # async worker lifecycle and JSONL protocol
+│   ├── latex-render-svg/      # SVG allowlist and deterministic PNG rasterization
 │   ├── latex-terminal/        # capabilities, layout, terminal backends
 │   └── latex-cli/             # standalone preview/diagnostic binary
 ├── renderer/
@@ -300,4 +301,3 @@ Proposed layout:
 The repository should not vendor the entire Codex source tree. Codex integration
 will be developed in an OpenAI Codex fork/branch and tested against released
 versions. This repository owns the reusable renderer and integration contract.
-

@@ -149,6 +149,12 @@ supported features, and hard limits.
 MathJax returns vector SVG. The terminal layer will rasterize it to a transparent
 PNG when required by the selected terminal protocol.
 
+The shared `latex-render-svg` boundary validates and rewrites worker SVG through an
+explicit element, attribute, and value allowlist before any cache or rasterizer sees
+it. Rasterization uses a pinned native library with external images, system fonts,
+compressed SVG, and runtime resource loading disabled. The synchronous rasterizer is
+called from a bounded blocking task by asynchronous integrations.
+
 Cache keys must include:
 
 - normalized source without changing semantics;
@@ -286,4 +292,3 @@ render_math(
 The MCP server can return the artifact and structured diagnostics. It should
 advertise server-wide constraints in MCP `instructions`, including maximum input
 size, no network access, and math-only support.
-
