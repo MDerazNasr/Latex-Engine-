@@ -207,6 +207,39 @@ rendered terminal image → optional Unicode approximation → original source
 Redirected/non-TTY output always uses the original source unless the user
 explicitly requests another format.
 
+### 10.8 Standalone CLI
+
+The Phase 1 binary is named `latex-render` and exposes two commands:
+
+```text
+latex-render render [OPTIONS] [SOURCE]
+latex-render check [OPTIONS]
+```
+
+`render` reads one positional source value or, when the value is absent and stdin is
+redirected, reads bounded UTF 8 input from stdin. It supports `--display`,
+`--format svg|png`, `--output PATH|-`, `--foreground #RRGGBB`,
+`--background transparent|#RRGGBB`, `--scale`, and `--max-width`. Output defaults to
+raw SVG on stdout. A file that already exists is preserved unless `--force` is
+explicitly supplied.
+
+`check` starts the worker, validates its handshake, renders a fixed source-free
+smoke expression through the Rust sanitizer, rasterizes the result, and reports
+protocol, renderer, sanitizer, rasterizer, health, and active limit values as stable
+key-value lines. Terminal capability diagnostics remain the Phase 2 `doctor`
+command.
+
+Both commands accept `--worker PATH` and `--node PROGRAM`. Worker discovery checks an
+explicit path first, then `LATEX_RENDER_WORKER`, then packaged paths relative to the
+binary, then the development repository path. Arguments are passed directly to the
+worker process without shell interpretation.
+
+The CLI writes diagnostics only to stderr, never includes equation source in an
+error, and reserves stdout for command output. Exit status 2 identifies usage or
+input errors, 3 identifies worker configuration or lifecycle errors, 4 identifies
+render, sanitizer, or raster errors, 5 identifies output errors, and 6 identifies an
+unexpected internal task failure.
+
 ## 11. Codex TUI integration specification
 
 ### 11.1 Data flow
