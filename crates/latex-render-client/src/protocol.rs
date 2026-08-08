@@ -1,6 +1,7 @@
 //! Strict wire types for worker protocol version one.
 
 use latex_render_core::{RenderError, RenderErrorCode, RenderLimits, RenderRequest, RenderedMath};
+use latex_render_svg::{SvgSanitizerLimits, sanitize_svg};
 use serde::{Deserialize, Serialize};
 
 use crate::{WORKER_PROTOCOL_VERSION, WorkerClientConfig};
@@ -198,8 +199,15 @@ pub(crate) fn decode_response(
     }
     match (response.ok, response.result, response.error) {
         (true, Some(result), None) => {
+            let sanitized = sanitize_svg(
+                result.svg_utf8.as_bytes(),
+                SvgSanitizerLimits {
+                    max_bytes: limits.max_svg_bytes,
+                    ..SvgSanitizerLimits::default()
+                },
+            )?;
             let rendered = RenderedMath {
-                svg: result.svg_utf8.into_bytes(),
+                svg: sanitized.into_bytes(),
                 width_px: result.width_px,
                 height_px: result.height_px,
                 baseline_px: Some(result.baseline_px),

@@ -197,6 +197,7 @@ name = "latex-render-client"
 version = "0.1.0"
 dependencies = [
  "latex-render-core",
+ "latex-render-svg",
  "serde",
  "serde_json",
  "tokio",

@@ -146,6 +146,21 @@ async fn incompatible_handshake_fails_closed_after_one_restart() {
 }
 
 #[tokio::test]
+async fn active_svg_is_rejected_before_cache_and_worker_is_recycled() {
+    let mut client = WorkerClient::start(config("unsafe", None)).expect("client should start");
+
+    let error = client
+        .render_request(request("x"))
+        .await
+        .expect_err("active SVG should fail");
+
+    assert_eq!(error.code, RenderErrorCode::UnsafeOutput);
+    assert_eq!(client.cache_stats().await.entries, 0);
+    assert_eq!(client.health().await.state, WorkerState::Backoff);
+    client.shutdown().await.expect("shutdown should succeed");
+}
+
+#[tokio::test]
 async fn full_queue_fails_fast_without_blocking_callers() {
     let mut config = config("slow", None);
     config.queue_capacity = 1;

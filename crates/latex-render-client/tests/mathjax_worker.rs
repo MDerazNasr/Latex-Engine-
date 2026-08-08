@@ -40,6 +40,12 @@ async fn built_mathjax_worker_renders_through_supervised_client() {
 
     assert!(rendered.svg.starts_with(b"<svg "));
     assert!(rendered.svg.ends_with(b"</svg>"));
+    assert!(
+        !rendered
+            .svg
+            .windows(b"data-latex".len())
+            .any(|bytes| bytes == b"data-latex")
+    );
     assert!(rendered.width_px > 0);
     assert!(rendered.height_px > 0);
     assert_eq!(client.health().await.state, WorkerState::Ready);

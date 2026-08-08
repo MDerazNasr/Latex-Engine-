@@ -7,6 +7,7 @@ use latex_render_core::{
     CacheKeyContext, CacheStats, MathRenderer, RenderCache, RenderError, RenderErrorCode,
     RenderFuture, RenderRequest, RenderedMath, derive_cache_key,
 };
+use latex_render_svg::SVG_POLICY_VERSION_LABEL;
 use tokio::sync::{Mutex, mpsc, oneshot};
 use tokio::task::JoinHandle;
 use tokio::time::timeout;
@@ -147,6 +148,7 @@ impl WorkerClient {
                 protocol_version: WORKER_PROTOCOL_VERSION,
                 renderer_version: &self.config.expected_renderer_version,
                 macro_policy_version: &self.config.macro_policy_version,
+                sanitizer_version: SVG_POLICY_VERSION_LABEL,
                 rasterizer_version: "none",
             },
         )

@@ -62,12 +62,16 @@ for await (const line of lines) {
   if (mode === "healthy-count" && marker) {
     appendFileSync(marker, "render\n", "utf8");
   }
+  const svg =
+    mode === "unsafe"
+      ? '<svg xmlns="http://www.w3.org/2000/svg"><script></script></svg>'
+      : '<svg xmlns="http://www.w3.org/2000/svg" width="4px" height="2px" role="img" focusable="false" viewBox="0 0 4 2" style="color: #e6edf3;"><path fill="currentColor" d="M0 0L4 0L4 2L0 2Z"/></svg>';
   respond({
     protocol: 1,
     id: mode === "wrong-id" ? "eq-wrong" : request.id,
     ok: true,
     result: {
-      svgUtf8: '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
+      svgUtf8: svg,
       widthPx: 64,
       heightPx: 32,
       baselinePx: 24,

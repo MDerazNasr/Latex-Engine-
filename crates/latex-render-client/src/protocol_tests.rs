@@ -4,6 +4,8 @@ use crate::WorkerClientConfig;
 use crate::config::WorkerCommand;
 use crate::protocol::{decode_ready, decode_response, encode_request};
 
+const SAFE_SVG: &str = r##"<svg xmlns="http://www.w3.org/2000/svg" width="4px" height="2px" role="img" focusable="false" viewBox="0 0 4 2" style="color: #e6edf3;"><path fill="currentColor" d="M0 0L4 0L4 2L0 2Z"/></svg>"##;
+
 #[test]
 fn request_encoding_matches_the_versioned_camel_case_contract() {
     let request = request("x^2");
@@ -71,15 +73,25 @@ fn ready_handshake_accepts_a_stricter_client_limit() {
 
 #[test]
 fn response_decoder_correlates_and_validates_success() {
-    let line = br#"{"protocol":1,"id":"eq-1","ok":true,"result":{"svgUtf8":"<svg></svg>","widthPx":10,"heightPx":5,"baselinePx":4,"accessibilityText":"x"}}"#;
-    let rendered = decode_response(line, "eq-1", "v1:key".to_owned(), &RenderLimits::default())
-        .expect("response should decode");
+    let line = success_line(10);
+    let rendered = decode_response(
+        line.as_bytes(),
+        "eq-1",
+        "v1:key".to_owned(),
+        &RenderLimits::default(),
+    )
+    .expect("response should decode");
 
-    assert_eq!(rendered.svg, b"<svg></svg>");
+    assert_eq!(rendered.svg, SAFE_SVG.as_bytes());
     assert_eq!(rendered.cache_key, "v1:key");
 
-    let error = decode_response(line, "eq-2", "v1:key".to_owned(), &RenderLimits::default())
-        .expect_err("wrong correlation should fail");
+    let error = decode_response(
+        line.as_bytes(),
+        "eq-2",
+        "v1:key".to_owned(),
+        &RenderLimits::default(),
+    )
+    .expect_err("wrong correlation should fail");
     assert_eq!(error.code, RenderErrorCode::Protocol);
 }
 
@@ -96,9 +108,32 @@ fn response_decoder_maps_worker_errors_without_controls() {
 
 #[test]
 fn response_decoder_rejects_invalid_success_as_unsafe_output() {
-    let line = br#"{"protocol":1,"id":"eq-1","ok":true,"result":{"svgUtf8":"<svg></svg>","widthPx":0,"heightPx":5,"baselinePx":4,"accessibilityText":"x"}}"#;
-    let error = decode_response(line, "eq-1", "v1:key".to_owned(), &RenderLimits::default())
-        .expect_err("invalid output should fail");
+    let line = success_line(0);
+    let error = decode_response(
+        line.as_bytes(),
+        "eq-1",
+        "v1:key".to_owned(),
+        &RenderLimits::default(),
+    )
+    .expect_err("invalid output should fail");
+
+    assert_eq!(error.code, RenderErrorCode::UnsafeOutput);
+}
+
+#[test]
+fn response_decoder_rejects_active_svg_content() {
+    let svg = r#"<svg xmlns="http://www.w3.org/2000/svg"><script></script></svg>"#;
+    let line = format!(
+        r#"{{"protocol":1,"id":"eq-1","ok":true,"result":{{"svgUtf8":{},"widthPx":10,"heightPx":5,"baselinePx":4,"accessibilityText":"x"}}}}"#,
+        serde_json::to_string(svg).expect("SVG should encode")
+    );
+    let error = decode_response(
+        line.as_bytes(),
+        "eq-1",
+        "v1:key".to_owned(),
+        &RenderLimits::default(),
+    )
+    .expect_err("active SVG should fail");
 
     assert_eq!(error.code, RenderErrorCode::UnsafeOutput);
 }
@@ -121,5 +156,12 @@ fn config() -> WorkerClientConfig {
 fn ready(version: &str, formats: &str, display_modes: &str) -> String {
     format!(
         r#"{{"protocol":1,"type":"ready","renderer":{{"name":"mathjax","version":"{version}"}},"capabilities":{{"formats":{formats},"displayModes":{display_modes}}},"limits":{{"maxSourceBytes":16384,"maxJsonLineBytes":65536,"maxSvgBytes":2097152,"maxWidthPx":4096,"maxHeightPx":2048,"minScale":0.5,"maxScale":4}}}}"#
+    )
+}
+
+fn success_line(width_px: u32) -> String {
+    format!(
+        r#"{{"protocol":1,"id":"eq-1","ok":true,"result":{{"svgUtf8":{},"widthPx":{width_px},"heightPx":5,"baselinePx":4,"accessibilityText":"x"}}}}"#,
+        serde_json::to_string(SAFE_SVG).expect("SVG should encode")
     )
 }

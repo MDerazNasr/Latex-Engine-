@@ -10,6 +10,7 @@ const CONTEXT: CacheKeyContext<'static> = CacheKeyContext {
     protocol_version: 1,
     renderer_version: "mathjax-0.1.0",
     macro_policy_version: "base-ams-1",
+    sanitizer_version: "svg-allowlist-1",
     rasterizer_version: "none",
 };
 
@@ -23,7 +24,7 @@ fn cache_key_is_stable_for_identical_inputs() {
     assert_eq!(first, second);
     assert_eq!(
         first,
-        "v1:025f735c7e22b033bd97f73e4eeb44cee0831e5728c6317ab79cfef765974f75"
+        "v1:ed8c59998985a501f1f91aba3bb13a124bc4217e0b2659dcf497f070bd90704d"
     );
 }
 
@@ -75,6 +76,13 @@ fn every_rendering_input_invalidates_the_key() {
         &request("x^2"),
         CacheKeyContext {
             macro_policy_version: "base-ams-2",
+            ..CONTEXT
+        },
+    ));
+    variants.push(derive_cache_key(
+        &request("x^2"),
+        CacheKeyContext {
+            sanitizer_version: "svg-allowlist-2",
             ..CONTEXT
         },
     ));

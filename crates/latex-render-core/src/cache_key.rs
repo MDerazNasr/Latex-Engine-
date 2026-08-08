@@ -14,6 +14,8 @@ pub struct CacheKeyContext<'a> {
     pub renderer_version: &'a str,
     /// Fixed extension and macro policy version.
     pub macro_policy_version: &'a str,
+    /// Sanitized output policy version.
+    pub sanitizer_version: &'a str,
     /// Rasterizer version or the literal value `none` for SVG only output.
     pub rasterizer_version: &'a str,
 }
@@ -26,6 +28,7 @@ pub fn derive_cache_key(request: &RenderRequest, context: CacheKeyContext<'_>) -
     add_field(&mut digest, &context.protocol_version.to_be_bytes());
     add_field(&mut digest, context.renderer_version.as_bytes());
     add_field(&mut digest, context.macro_policy_version.as_bytes());
+    add_field(&mut digest, context.sanitizer_version.as_bytes());
     add_field(&mut digest, context.rasterizer_version.as_bytes());
     add_field(&mut digest, request.source.as_bytes());
     add_field(&mut digest, &[u8::from(request.display_mode)]);
