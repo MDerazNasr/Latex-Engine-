@@ -75,7 +75,7 @@ fn validate_attribute(element: &str, key: &str, value: &str) -> Result<(), Rende
         ("svg", "role") => value == "img",
         ("svg", "focusable") => value == "false",
         ("svg", "style") => valid_root_style(value),
-        ("g", "transform") => valid_transform(value),
+        ("g" | "path" | "rect", "transform") => valid_transform(value),
         ("g" | "path" | "rect", "fill" | "stroke") => valid_paint(value),
         ("g" | "path" | "rect", "stroke-width") => valid_nonnegative_number(value),
         ("path", "d") => valid_path(value),
@@ -135,7 +135,8 @@ fn valid_transform(value: &str) -> bool {
 
 fn valid_path(value: &str) -> bool {
     if value.is_empty() {
-        return false;
+        // Empty paths remain safe because MathJax uses them as spacing glyphs with no geometry.
+        return true;
     }
     let mut count = 0usize;
     for segment in PathParser::from(value) {

@@ -20,6 +20,22 @@ fn mathjax_fixture_is_allowed_and_metadata_is_removed() {
 }
 
 #[test]
+fn empty_mathjax_spacing_path_is_allowed() {
+    let sanitized = sanitize_svg(
+        root(r#"<path data-c="2061" d="" transform="translate(12,0)"/>"#).as_bytes(),
+        SvgSanitizerLimits::default(),
+    )
+    .expect("empty MathJax spacing path should pass");
+
+    assert!(
+        sanitized
+            .as_str()
+            .contains(r#"<path d="" transform="translate(12,0)"/>"#)
+    );
+    assert!(!sanitized.as_str().contains("data-c"));
+}
+
+#[test]
 fn active_elements_and_attributes_fail_closed() {
     let cases = [
         root("<script></script>"),
