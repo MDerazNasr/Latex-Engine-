@@ -1,0 +1,21 @@
+[package]
+name = "latex-cli"
+description = "Standalone renderer and installation checks for Codex LaTeX output"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[[bin]]
+name = "latex-render"
+path = "src/main.rs"
+
+[dependencies]
+latex-render-client = { path = "../latex-render-client" }
+latex-render-core = { path = "../latex-render-core" }
+latex-render-svg = { path = "../latex-render-svg" }
+tokio = { version = "=1.53.1", features = ["macros", "rt"] }
+
+[lints]
+workspace = true

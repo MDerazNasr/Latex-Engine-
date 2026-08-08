@@ -193,6 +193,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "latex-cli"
+version = "0.1.0"
+dependencies = [
+ "latex-render-client",
+ "latex-render-core",
+ "latex-render-svg",
+ "tokio",
+]
+
+[[package]]
 name = "latex-render-client"
 version = "0.1.0"
 dependencies = [
