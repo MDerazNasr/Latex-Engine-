@@ -60,6 +60,32 @@ fn png_renders_to_stdout_through_the_native_boundary() {
 }
 
 #[test]
+fn new_output_is_published_only_after_rendering_completes() {
+    let path = temporary_file("svg");
+    assert!(!path.exists(), "temporary target should be unused");
+
+    let output = command()
+        .args(worker_arguments())
+        .args(["--output"])
+        .arg(&path)
+        .arg("x^2")
+        .output()
+        .expect("CLI should run");
+
+    assert!(output.status.success(), "{}", stderr(&output));
+    assert!(output.stdout.is_empty());
+    assert!(output.stderr.is_empty());
+    assert!(
+        fs::read(&path)
+            .expect("SVG should be readable")
+            .starts_with(b"<svg ")
+    );
+    assert!(!temporary_sibling_exists(&path));
+
+    fs::remove_file(path).expect("temporary output should be removed");
+}
+
+#[test]
 fn existing_output_is_preserved_until_force_is_explicit() {
     let path = temporary_file("png");
     fs::write(&path, b"original").expect("fixture should be created");
@@ -145,6 +171,18 @@ fn temporary_file(extension: &str) -> PathBuf {
         "latex-render-cli-{}-{id}.{extension}",
         std::process::id()
     ))
+}
+
+fn temporary_sibling_exists(path: &std::path::Path) -> bool {
+    let Some(file_name) = path.file_name().and_then(|name| name.to_str()) else {
+        return true;
+    };
+    let prefix = format!("{file_name}.latex-render.{}.", std::process::id());
+    fs::read_dir(path.parent().expect("temporary file should have a parent"))
+        .expect("temporary directory should be readable")
+        .filter_map(Result::ok)
+        .filter_map(|entry| entry.file_name().into_string().ok())
+        .any(|name| name.starts_with(&prefix) && name.ends_with(".tmp"))
 }
 
 fn stderr(output: &std::process::Output) -> String {
