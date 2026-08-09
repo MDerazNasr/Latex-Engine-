@@ -7,6 +7,8 @@ mod output;
 mod worker_path;
 
 #[cfg(test)]
+mod app_tests;
+#[cfg(test)]
 mod args_tests;
 
 use args::ParsedArgs;
