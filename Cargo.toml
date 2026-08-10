@@ -6,6 +6,7 @@ members = [
     "crates/latex-render-svg",
     "crates/latex-segmenter",
     "crates/latex-terminal",
+    "tools/latex-bench",
 ]
 resolver = "2"
 

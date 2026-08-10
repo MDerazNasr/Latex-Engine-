@@ -193,6 +193,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "latex-bench"
+version = "0.1.0"
+dependencies = [
+ "latex-render-client",
+ "latex-render-core",
+ "latex-segmenter",
+ "tokio",
+]
+
+[[package]]
 name = "latex-cli"
 version = "0.1.0"
 dependencies = [
