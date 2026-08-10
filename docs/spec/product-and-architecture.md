@@ -291,6 +291,8 @@ Proposed layout:
 │   ├── parsing/
 │   ├── rendering/
 │   └── transcripts/
+├── tools/
+│   └── latex-bench/           # release-mode Phase 1 performance gate
 ├── docs/
 │   ├── architecture/
 │   ├── security.md

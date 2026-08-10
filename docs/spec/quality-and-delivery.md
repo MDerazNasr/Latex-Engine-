@@ -131,6 +131,20 @@ Fuzz targets:
   input.
 - Renderer upgrade review using explicit snapshot diffs.
 
+The Phase 1 snapshot suite renders every entry in
+`fixtures/rendering/math-corpus.json` once with the dark foreground `#e6edf3` and
+once with the light foreground `#111827`, both on a transparent background. The
+sanitized SVG must match byte for byte. PNG comparison decodes RGBA pixels, requires
+equal dimensions, permits a maximum channel delta of 2, and permits at most 0.1
+percent of pixels to differ. Snapshot replacement requires the explicit
+`UPDATE_LATEX_SNAPSHOTS=1` environment variable and a reviewed fixture diff.
+
+The release-mode `latex-bench` harness measures first render, warmed uncached simple
+render, warmed complex render, cached lookup, and segmenter delta p95 values. It uses
+one supervised worker session, distinct sources for uncached samples, at least 50
+simple render samples, at least 30 complex samples, and at least 500 cached samples.
+The harness exits unsuccessfully when the targets in section 14.1 are missed.
+
 ### 16.4 Integration tests
 
 - Replay recorded Codex message-delta sequences.
