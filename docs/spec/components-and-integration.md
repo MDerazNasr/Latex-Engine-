@@ -307,7 +307,7 @@ Proposed standalone commands:
 ```text
 latex-render render --display 'E = mc^2'
 latex-render render --format svg --output equation.svg '\int_0^1 x^2 dx'
-latex-render check '\frac{1}{'
+latex-render check
 latex-render doctor
 ```
 
