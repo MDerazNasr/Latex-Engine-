@@ -1,0 +1,402 @@
+[
+  {
+    "name": "power",
+    "theme": "dark",
+    "displayMode": false,
+    "widthPx": 37,
+    "heightPx": 31,
+    "baselinePx": 30.0
+  },
+  {
+    "name": "power",
+    "theme": "light",
+    "displayMode": false,
+    "widthPx": 37,
+    "heightPx": 31,
+    "baselinePx": 30.0
+  },
+  {
+    "name": "fraction",
+    "theme": "dark",
+    "displayMode": false,
+    "widthPx": 29,
+    "heightPx": 44,
+    "baselinePx": 31.0
+  },
+  {
+    "name": "fraction",
+    "theme": "light",
+    "displayMode": false,
+    "widthPx": 29,
+    "heightPx": 44,
+    "baselinePx": 31.0
+  },
+  {
+    "name": "root",
+    "theme": "dark",
+    "displayMode": false,
+    "widthPx": 152,
+    "heightPx": 46,
+    "baselinePx": 36.0
+  },
+  {
+    "name": "root",
+    "theme": "light",
+    "displayMode": false,
+    "widthPx": 152,
+    "heightPx": 46,
+    "baselinePx": 36.0
+  },
+  {
+    "name": "sum",
+    "theme": "dark",
+    "displayMode": true,
+    "widthPx": 71,
+    "heightPx": 100,
+    "baselinePx": 57.0
+  },
+  {
+    "name": "sum",
+    "theme": "light",
+    "displayMode": true,
+    "widthPx": 71,
+    "heightPx": 100,
+    "baselinePx": 57.0
+  },
+  {
+    "name": "integral",
+    "theme": "dark",
+    "displayMode": true,
+    "widthPx": 143,
+    "heightPx": 90,
+    "baselinePx": 56.0
+  },
+  {
+    "name": "integral",
+    "theme": "light",
+    "displayMode": true,
+    "widthPx": 143,
+    "heightPx": 90,
+    "baselinePx": 56.0
+  },
+  {
+    "name": "limit",
+    "theme": "dark",
+    "displayMode": true,
+    "widthPx": 213,
+    "heightPx": 76,
+    "baselinePx": 48.0
+  },
+  {
+    "name": "limit",
+    "theme": "light",
+    "displayMode": true,
+    "widthPx": 213,
+    "heightPx": 76,
+    "baselinePx": 48.0
+  },
+  {
+    "name": "greek",
+    "theme": "dark",
+    "displayMode": false,
+    "widthPx": 24,
+    "heightPx": 37,
+    "baselinePx": 27.0
+  },
+  {
+    "name": "greek",
+    "theme": "light",
+    "displayMode": false,
+    "widthPx": 24,
+    "heightPx": 37,
+    "baselinePx": 27.0
+  },
+  {
+    "name": "matrix",
+    "theme": "dark",
+    "displayMode": true,
+    "widthPx": 75,
+    "heightPx": 87,
+    "baselinePx": 52.0
+  },
+  {
+    "name": "matrix",
+    "theme": "light",
+    "displayMode": true,
+    "widthPx": 75,
+    "heightPx": 87,
+    "baselinePx": 52.0
+  },
+  {
+    "name": "pmatrix",
+    "theme": "dark",
+    "displayMode": true,
+    "widthPx": 126,
+    "heightPx": 87,
+    "baselinePx": 52.0
+  },
+  {
+    "name": "pmatrix",
+    "theme": "light",
+    "displayMode": true,
+    "widthPx": 126,
+    "heightPx": 87,
+    "baselinePx": 52.0
+  },
+  {
+    "name": "cases",
+    "theme": "dark",
+    "displayMode": true,
+    "widthPx": 320,
+    "heightPx": 83,
+    "baselinePx": 50.0
+  },
+  {
+    "name": "cases",
+    "theme": "light",
+    "displayMode": true,
+    "widthPx": 320,
+    "heightPx": 83,
+    "baselinePx": 50.0
+  },
+  {
+    "name": "aligned",
+    "theme": "dark",
+    "displayMode": true,
+    "widthPx": 149,
+    "heightPx": 84,
+    "baselinePx": 51.0
+  },
+  {
+    "name": "aligned",
+    "theme": "light",
+    "displayMode": true,
+    "widthPx": 149,
+    "heightPx": 84,
+    "baselinePx": 51.0
+  },
+  {
+    "name": "align",
+    "theme": "dark",
+    "displayMode": true,
+    "widthPx": 88,
+    "heightPx": 84,
+    "baselinePx": 51.0
+  },
+  {
+    "name": "align",
+    "theme": "light",
+    "displayMode": true,
+    "widthPx": 88,
+    "heightPx": 84,
+    "baselinePx": 51.0
+  },
+  {
+    "name": "binomial",
+    "theme": "dark",
+    "displayMode": false,
+    "widthPx": 54,
+    "heightPx": 53,
+    "baselinePx": 35.0
+  },
+  {
+    "name": "binomial",
+    "theme": "light",
+    "displayMode": false,
+    "widthPx": 54,
+    "heightPx": 53,
+    "baselinePx": 35.0
+  },
+  {
+    "name": "vector",
+    "theme": "dark",
+    "displayMode": false,
+    "widthPx": 21,
+    "heightPx": 40,
+    "baselinePx": 30.0
+  },
+  {
+    "name": "vector",
+    "theme": "light",
+    "displayMode": false,
+    "widthPx": 21,
+    "heightPx": 40,
+    "baselinePx": 30.0
+  },
+  {
+    "name": "accents",
+    "theme": "dark",
+    "displayMode": false,
+    "widthPx": 21,
+    "heightPx": 39,
+    "baselinePx": 30.0
+  },
+  {
+    "name": "accents",
+    "theme": "light",
+    "displayMode": false,
+    "widthPx": 21,
+    "heightPx": 39,
+    "baselinePx": 30.0
+  },
+  {
+    "name": "underbrace",
+    "theme": "dark",
+    "displayMode": true,
+    "widthPx": 153,
+    "heightPx": 70,
+    "baselinePx": 24.0
+  },
+  {
+    "name": "underbrace",
+    "theme": "light",
+    "displayMode": true,
+    "widthPx": 153,
+    "heightPx": 70,
+    "baselinePx": 24.0
+  },
+  {
+    "name": "text",
+    "theme": "dark",
+    "displayMode": false,
+    "widthPx": 145,
+    "heightPx": 37,
+    "baselinePx": 27.0
+  },
+  {
+    "name": "text",
+    "theme": "light",
+    "displayMode": false,
+    "widthPx": 145,
+    "heightPx": 37,
+    "baselinePx": 27.0
+  },
+  {
+    "name": "operator",
+    "theme": "dark",
+    "displayMode": false,
+    "widthPx": 127,
+    "heightPx": 37,
+    "baselinePx": 27.0
+  },
+  {
+    "name": "operator",
+    "theme": "light",
+    "displayMode": false,
+    "widthPx": 127,
+    "heightPx": 37,
+    "baselinePx": 27.0
+  },
+  {
+    "name": "sets",
+    "theme": "dark",
+    "displayMode": false,
+    "widthPx": 28,
+    "heightPx": 37,
+    "baselinePx": 27.0
+  },
+  {
+    "name": "sets",
+    "theme": "light",
+    "displayMode": false,
+    "widthPx": 28,
+    "heightPx": 37,
+    "baselinePx": 27.0
+  },
+  {
+    "name": "logic",
+    "theme": "dark",
+    "displayMode": false,
+    "widthPx": 28,
+    "heightPx": 37,
+    "baselinePx": 27.0
+  },
+  {
+    "name": "logic",
+    "theme": "light",
+    "displayMode": false,
+    "widthPx": 28,
+    "heightPx": 37,
+    "baselinePx": 27.0
+  },
+  {
+    "name": "probability",
+    "theme": "dark",
+    "displayMode": true,
+    "widthPx": 313,
+    "heightPx": 81,
+    "baselinePx": 55.0
+  },
+  {
+    "name": "probability",
+    "theme": "light",
+    "displayMode": true,
+    "widthPx": 313,
+    "heightPx": 81,
+    "baselinePx": 55.0
+  },
+  {
+    "name": "derivative",
+    "theme": "dark",
+    "displayMode": true,
+    "widthPx": 173,
+    "heightPx": 75,
+    "baselinePx": 50.0
+  },
+  {
+    "name": "derivative",
+    "theme": "light",
+    "displayMode": true,
+    "widthPx": 173,
+    "heightPx": 75,
+    "baselinePx": 50.0
+  },
+  {
+    "name": "inner-product",
+    "theme": "dark",
+    "displayMode": false,
+    "widthPx": 38,
+    "heightPx": 37,
+    "baselinePx": 27.0
+  },
+  {
+    "name": "inner-product",
+    "theme": "light",
+    "displayMode": false,
+    "widthPx": 38,
+    "heightPx": 37,
+    "baselinePx": 27.0
+  },
+  {
+    "name": "quadratic",
+    "theme": "dark",
+    "displayMode": true,
+    "widthPx": 333,
+    "heightPx": 85,
+    "baselinePx": 59.0
+  },
+  {
+    "name": "quadratic",
+    "theme": "light",
+    "displayMode": true,
+    "widthPx": 333,
+    "heightPx": 85,
+    "baselinePx": 59.0
+  },
+  {
+    "name": "unicode",
+    "theme": "dark",
+    "displayMode": false,
+    "widthPx": 53,
+    "heightPx": 40,
+    "baselinePx": 30.0
+  },
+  {
+    "name": "unicode",
+    "theme": "light",
+    "displayMode": false,
+    "widthPx": 53,
+    "heightPx": 40,
+    "baselinePx": 30.0
+  }
+]
