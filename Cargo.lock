@@ -220,6 +220,7 @@ dependencies = [
  "latex-render-svg",
  "serde",
  "serde_json",
+ "tiny-skia",
  "tokio",
 ]
 
