@@ -1,0 +1,6 @@
+/target/
+/renderer/mathjax-worker/node_modules/
+/renderer/mathjax-worker/dist/
+/tmp/
+.DS_Store
+

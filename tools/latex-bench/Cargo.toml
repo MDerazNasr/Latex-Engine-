@@ -1,0 +1,18 @@
+[package]
+name = "latex-bench"
+description = "Release performance gate for the Codex LaTeX renderer"
+edition.workspace = true
+license.workspace = true
+publish = false
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[dependencies]
+latex-render-client = { path = "../../crates/latex-render-client" }
+latex-render-core = { path = "../../crates/latex-render-core" }
+latex-segmenter = { path = "../../crates/latex-segmenter" }
+tokio = { version = "=1.53.1", features = ["macros", "rt", "time"] }
+
+[lints]
+workspace = true
