@@ -192,6 +192,24 @@ The terminal widget must:
 - cap image width and height; and
 - restore terminal state after errors, panics, or interrupts.
 
+Phase 2 layout uses measured terminal columns, rows, pixel width, and pixel height.
+Zero or unavailable pixel measurements select source fallback instead of guessing a
+cell aspect ratio. Inline math is uniformly scaled down to at most one cell row and
+remains inline only when it fits the columns left on the current row. Other inline
+math is promoted to a centered block. Display math is always a centered block capped
+by `max_width_percent`, `max_height_rows`, and the visible viewport.
+
+The raster canvas exactly matches the reserved cell rectangle in measured pixels.
+Equation content is uniformly scaled without upscaling and placed on that transparent
+canvas, so Kitty `c,r` placement cannot distort its aspect ratio. Inline content uses
+the MathJax baseline to align with the text baseline when available; block content is
+centered in both axes. A terminal column, row, cell-pixel, theme, or policy change
+creates a new layout generation and invalidates older raster and placement results.
+
+The layout contract returns presentation mode, reserved cells, pixel canvas, content
+rectangle, baseline, and horizontal placement. It never writes terminal control
+sequences; synchronized placement remains the caller's responsibility.
+
 ### 10.7 Text fallback
 
 Every expression always has a source fallback. The optional Unicode fallback may
