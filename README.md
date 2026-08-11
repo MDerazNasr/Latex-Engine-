@@ -64,3 +64,14 @@ corepack pnpm format
 corepack pnpm check
 corepack pnpm test
 ```
+
+Run the reviewed real-worker snapshots and release performance gate from the
+repository root:
+
+```sh
+cargo test -p latex-render-client --test snapshots -- --ignored --exact rendering_corpus_matches_reviewed_snapshots
+cargo run --release -p latex-bench
+```
+
+Snapshot replacement is intentionally separate and requires
+`UPDATE_LATEX_SNAPSHOTS=1`; inspect every SVG, PNG, and manifest diff before commit.
