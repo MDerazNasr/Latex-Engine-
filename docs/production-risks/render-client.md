@@ -53,4 +53,6 @@ and explicit shutdown closes, kills, waits, and reports a reap failure.
 
 Test coverage: process tests cover missing runtimes, invalid configuration, crashes,
 one successful restart, incompatible handshakes, timeouts, restart backoff, graceful
-shutdown, active-work shutdown, and the built MathJax process end to end.
+shutdown, active-work shutdown, and the built MathJax process end to end. Fake process
+tests use the production startup budget under parallel CI load, and unique marker
+files have scope-based cleanup even when an assertion panics.

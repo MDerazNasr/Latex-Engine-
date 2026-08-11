@@ -1,7 +1,7 @@
 #![doc = "Supervised worker process integration tests."]
 
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, Instant};
@@ -39,9 +39,9 @@ fn client_rejects_invalid_resource_configuration() {
 
 #[tokio::test]
 async fn worker_is_lazy_cached_and_gracefully_stopped() {
-    let marker = marker_path("cache");
-    let mut client =
-        WorkerClient::start(config("healthy-count", Some(&marker))).expect("client should start");
+    let marker = TestMarker::new("cache");
+    let mut client = WorkerClient::start(config("healthy-count", Some(marker.path())))
+        .expect("client should start");
     assert_eq!(client.health().await.state, WorkerState::Idle);
 
     let first = client
@@ -60,13 +60,12 @@ async fn worker_is_lazy_cached_and_gracefully_stopped() {
     assert_eq!(stats.hits, 1);
     assert_eq!(stats.misses, 1);
     assert_eq!(
-        fs::read_to_string(&marker).expect("counter should exist"),
+        fs::read_to_string(marker.path()).expect("counter should exist"),
         "render\n"
     );
 
     client.shutdown().await.expect("shutdown should succeed");
     assert_eq!(client.health().await.state, WorkerState::Stopped);
-    remove_marker(&marker);
 }
 
 #[tokio::test]
@@ -88,9 +87,9 @@ async fn invalid_tex_isolated_without_restarting_worker() {
 
 #[tokio::test]
 async fn crash_is_restarted_once_and_request_recovers() {
-    let marker = marker_path("restart");
-    let mut client =
-        WorkerClient::start(config("crash-once", Some(&marker))).expect("client should start");
+    let marker = TestMarker::new("restart");
+    let mut client = WorkerClient::start(config("crash-once", Some(marker.path())))
+        .expect("client should start");
 
     let rendered = client
         .render_request(request("x"))
@@ -100,7 +99,6 @@ async fn crash_is_restarted_once_and_request_recovers() {
     assert_eq!(rendered.accessibility_text, "x");
     assert_eq!(client.health().await.restart_count, 1);
     client.shutdown().await.expect("shutdown should succeed");
-    remove_marker(&marker);
 }
 
 #[tokio::test]
@@ -244,18 +242,19 @@ async fn shutdown_cancels_active_work_and_reaps_the_worker() {
     assert_eq!(client.health().await.state, WorkerState::Stopped);
 }
 
-fn config(mode: &str, marker: Option<&PathBuf>) -> WorkerClientConfig {
+fn config(mode: &str, marker: Option<&Path>) -> WorkerClientConfig {
     let script = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("tests")
         .join("support")
         .join("fake-worker.mjs");
     let mut command = WorkerCommand::new("node").arg(script).arg(mode);
     if let Some(marker) = marker {
-        command = command.arg(marker);
+        command = command.arg(marker.as_os_str());
     }
     let mut config = WorkerClientConfig::new(command);
-    config.startup_timeout = Duration::from_millis(500);
-    config.render_timeout = Duration::from_millis(500);
+    // The production startup budget prevents parallel CI load from creating a false restart.
+    config.startup_timeout = Duration::from_millis(1_500);
+    config.render_timeout = Duration::from_millis(1_000);
     config.shutdown_timeout = Duration::from_millis(100);
     config.restart_interval = Duration::from_millis(250);
     config.cache_limits = CacheLimits {
@@ -276,14 +275,24 @@ fn request(source: &str) -> RenderRequest {
     }
 }
 
-fn marker_path(label: &str) -> PathBuf {
-    std::env::temp_dir().join(format!(
-        "latex-render-client-{label}-{}-{}",
-        std::process::id(),
-        NEXT_MARKER.fetch_add(1, Ordering::Relaxed)
-    ))
+struct TestMarker(PathBuf);
+
+impl TestMarker {
+    fn new(label: &str) -> Self {
+        Self(std::env::temp_dir().join(format!(
+            "latex-render-client-{label}-{}-{}",
+            std::process::id(),
+            NEXT_MARKER.fetch_add(1, Ordering::Relaxed)
+        )))
+    }
+
+    fn path(&self) -> &Path {
+        &self.0
+    }
 }
 
-fn remove_marker(path: &PathBuf) {
-    let _ = fs::remove_file(path);
+impl Drop for TestMarker {
+    fn drop(&mut self) {
+        let _ = fs::remove_file(&self.0);
+    }
 }
