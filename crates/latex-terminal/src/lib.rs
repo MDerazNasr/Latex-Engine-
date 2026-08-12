@@ -1,6 +1,7 @@
 //! Terminal capability detection and image protocol primitives.
 
 mod capabilities;
+mod layout;
 mod placement;
 mod protocol;
 
@@ -9,6 +10,14 @@ pub use capabilities::TerminalBackend;
 pub use capabilities::TerminalEnvironment;
 pub use capabilities::TerminalSupport;
 pub use capabilities::detect_terminal_support;
+pub use layout::ImageLayout;
+pub use layout::LayoutError;
+pub use layout::LayoutMode;
+pub use layout::LayoutPolicy;
+pub use layout::MathGeometry;
+pub use layout::PixelRect;
+pub use layout::TerminalGeometry;
+pub use layout::layout_math;
 pub use placement::ImageDraw;
 pub use placement::ImageRenderState;
 pub use placement::ImageSource;
