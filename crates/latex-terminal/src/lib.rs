@@ -2,6 +2,7 @@
 
 mod capabilities;
 mod layout;
+mod local_store;
 mod placement;
 mod presenter;
 mod protocol;
@@ -19,6 +20,9 @@ pub use layout::MathGeometry;
 pub use layout::PixelRect;
 pub use layout::TerminalGeometry;
 pub use layout::layout_math;
+pub use local_store::LocalPngStore;
+pub use local_store::LocalPngStoreLimits;
+pub use local_store::LocalStoreError;
 pub use placement::ImageDraw;
 pub use placement::ImageRenderState;
 pub use placement::ImageSource;

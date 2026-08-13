@@ -253,6 +253,7 @@ dependencies = [
  "base64",
  "latex-render-core",
  "latex-render-svg",
+ "sha2",
 ]
 
 [[package]]

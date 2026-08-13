@@ -10,6 +10,7 @@ repository.workspace = true
 base64 = "=0.22.1"
 latex-render-core = { path = "../latex-render-core" }
 latex-render-svg = { path = "../latex-render-svg" }
+sha2 = "=0.11.0"
 
 [lints]
 workspace = true
