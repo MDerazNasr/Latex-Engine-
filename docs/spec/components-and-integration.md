@@ -221,6 +221,14 @@ replacement deletes the prior image before drawing the new one. Cancellation,
 backend changes, and explicit fallback invalidate pending jobs and expose cleanup
 bytes without suppressing the canonical source.
 
+The iTerm2 Kitty implementation uses local file transmission. Generated PNG files
+live in one private session directory beneath the operating system temporary
+directory. The store uses content addressed names, exclusive creation, bounded file
+count and total bytes, and retains every published file until terminal presentation
+shuts down. It removes only its uniquely created directory on drop. Creation,
+capacity, write, or validation failure selects source fallback. Direct Kitty
+transmission never creates a local file.
+
 ### 10.7 Text fallback
 
 Every expression always has a source fallback. The optional Unicode fallback may
