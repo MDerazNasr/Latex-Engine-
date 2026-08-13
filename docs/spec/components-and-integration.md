@@ -210,6 +210,17 @@ The layout contract returns presentation mode, reserved cells, pixel canvas, con
 rectangle, baseline, and horizontal placement. It never writes terminal control
 sequences; synchronized placement remains the caller's responsibility.
 
+The presentation adapter owns a monotonically increasing generation and active image
+state. Starting a render returns an immutable job that contains generation, backend,
+placement identity, row, layout, and the fitted raster request. Raster completion
+must carry the same job back to the adapter. Publication succeeds only when its
+generation and backend are still current and the PNG dimensions equal the reserved
+canvas. Stale completion emits no terminal bytes. A valid completion is converted to
+the backend specific source and passed through the deterministic placement state so
+replacement deletes the prior image before drawing the new one. Cancellation,
+backend changes, and explicit fallback invalidate pending jobs and expose cleanup
+bytes without suppressing the canonical source.
+
 ### 10.7 Text fallback
 
 Every expression always has a source fallback. The optional Unicode fallback may
