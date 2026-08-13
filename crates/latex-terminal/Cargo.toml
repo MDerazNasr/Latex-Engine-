@@ -8,6 +8,8 @@ repository.workspace = true
 
 [dependencies]
 base64 = "=0.22.1"
+latex-render-core = { path = "../latex-render-core" }
+latex-render-svg = { path = "../latex-render-svg" }
 
 [lints]
 workspace = true

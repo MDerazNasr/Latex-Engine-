@@ -3,6 +3,7 @@
 mod capabilities;
 mod layout;
 mod placement;
+mod presenter;
 mod protocol;
 
 pub use capabilities::FallbackReason;
@@ -22,6 +23,12 @@ pub use placement::ImageDraw;
 pub use placement::ImageRenderState;
 pub use placement::ImageSource;
 pub use placement::PlacementError;
+pub use presenter::PresentationError;
+pub use presenter::PresentationJob;
+pub use presenter::PublishOutcome;
+pub use presenter::RasterizedPresentation;
+pub use presenter::TerminalPresenter;
+pub use presenter::rasterize_presentation;
 pub use protocol::PlacementSize;
 pub use protocol::ProtocolError;
 pub use protocol::kitty_delete_image;
