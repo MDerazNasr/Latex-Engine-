@@ -9,7 +9,7 @@ use std::num::NonZeroUsize;
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
-use latex_render_svg::MAX_PNG_BYTES;
+use latex_render_svg::RasterLimits;
 use sha2::{Digest as _, Sha256};
 
 use crate::ImageSource;
@@ -18,7 +18,6 @@ const DIRECTORY_ATTEMPTS: usize = 32;
 const DIRECTORY_PREFIX: &str = "latex-engine-tty-graphics-protocol";
 const DEFAULT_MAX_FILES: usize = 256;
 const DEFAULT_MAX_TOTAL_BYTES: usize = 128 * 1024 * 1024;
-const PNG_SIGNATURE: &[u8] = b"\x89PNG\r\n\x1a\n";
 static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
 
 /// Resource limits for one session owned local PNG store.
@@ -205,11 +204,9 @@ impl Drop for LocalPngStore {
 }
 
 fn validate_png(png: &[u8]) -> Result<(), LocalStoreError> {
-    if png.len() > MAX_PNG_BYTES || !png.starts_with(PNG_SIGNATURE) {
-        Err(LocalStoreError::InvalidPng)
-    } else {
-        Ok(())
-    }
+    latex_render_svg::validate_png(png, RasterLimits::default())
+        .map(|_| ())
+        .map_err(|_| LocalStoreError::InvalidPng)
 }
 
 fn hex_digest(digest: &[u8; 32]) -> String {

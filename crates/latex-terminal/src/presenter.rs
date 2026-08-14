@@ -6,8 +6,8 @@ use std::io::Read as _;
 use std::num::NonZeroU32;
 
 use latex_render_svg::{
-    FittedRasterRequest, MAX_PNG_BYTES, PngImage, RasterLimits, RasterRect, SanitizedSvg,
-    rasterize_svg_fitted,
+    FittedRasterRequest, PngImage, RasterLimits, RasterRect, SanitizedSvg, rasterize_svg_fitted,
+    validate_png,
 };
 
 use crate::{
@@ -65,7 +65,9 @@ impl RasterizedPresentation {
         {
             return Err(PresentationError::RasterDimensionsMismatch);
         }
-        if image.bytes.len() > MAX_PNG_BYTES || !image.bytes.starts_with(b"\x89PNG\r\n\x1a\n") {
+        let decoded = validate_png(&image.bytes, RasterLimits::default())
+            .map_err(|_| PresentationError::InvalidRasterBytes)?;
+        if decoded.width_px != image.width_px || decoded.height_px != image.height_px {
             return Err(PresentationError::InvalidRasterBytes);
         }
         Ok(Self { job, image })

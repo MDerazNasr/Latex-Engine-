@@ -129,6 +129,24 @@ pub fn rasterize_svg_fitted(
     encode_pixmap(pixmap, canvas, limits)
 }
 
+/// Validates bounded PNG bytes and returns their decoded dimensions.
+pub fn validate_png(png: &[u8], limits: RasterLimits) -> Result<RasterRequest, RenderError> {
+    if png.len() > limits.max_png_bytes {
+        return Err(RenderError::new(
+            RenderErrorCode::OutputLimitExceeded,
+            "Encoded PNG exceeds its byte limit",
+            false,
+        ));
+    }
+    let request = png_header_dimensions(png)?;
+    validate_request(request, limits)?;
+    let pixmap = Pixmap::decode_png(png).map_err(|_| invalid_png())?;
+    if pixmap.width() != request.width_px || pixmap.height() != request.height_px {
+        return Err(invalid_png());
+    }
+    Ok(request)
+}
+
 fn parse_tree(svg: &SanitizedSvg) -> Result<Tree, RenderError> {
     let options = Options {
         resources_dir: None,
@@ -195,6 +213,30 @@ fn validate_content_rect(request: FittedRasterRequest) -> Result<(), RenderError
         ));
     }
     Ok(())
+}
+
+fn png_header_dimensions(png: &[u8]) -> Result<RasterRequest, RenderError> {
+    const PNG_HEADER_BYTES: usize = 33;
+    const PNG_SIGNATURE: &[u8] = b"\x89PNG\r\n\x1a\n";
+    if png.len() < PNG_HEADER_BYTES
+        || !png.starts_with(PNG_SIGNATURE)
+        || png[8..12] != [0, 0, 0, 13]
+        || &png[12..16] != b"IHDR"
+    {
+        return Err(invalid_png());
+    }
+    Ok(RasterRequest {
+        width_px: u32::from_be_bytes(png[16..20].try_into().expect("width slice is exact")),
+        height_px: u32::from_be_bytes(png[20..24].try_into().expect("height slice is exact")),
+    })
+}
+
+fn invalid_png() -> RenderError {
+    RenderError::new(
+        RenderErrorCode::UnsafeOutput,
+        "Raster PNG is malformed",
+        false,
+    )
 }
 
 fn validate_request(request: RasterRequest, limits: RasterLimits) -> Result<(), RenderError> {

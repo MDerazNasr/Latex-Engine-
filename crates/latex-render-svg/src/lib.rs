@@ -6,7 +6,7 @@ mod sanitizer;
 
 pub use rasterizer::{
     FittedRasterRequest, MAX_PNG_BYTES, PngImage, RasterLimits, RasterRect, RasterRequest,
-    rasterize_svg, rasterize_svg_fitted,
+    rasterize_svg, rasterize_svg_fitted, validate_png,
 };
 pub use sanitizer::{SanitizedSvg, SvgSanitizerLimits, sanitize_svg};
 
