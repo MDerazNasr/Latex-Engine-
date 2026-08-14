@@ -5,9 +5,9 @@ use std::num::NonZeroU32;
 use latex_render_core::RenderErrorCode;
 use latex_render_svg::{PngImage, RasterLimits, SvgSanitizerLimits, sanitize_svg};
 use latex_terminal::{
-    ImageSource, LayoutPolicy, MathGeometry, PresentationError, PublishOutcome,
-    RasterizedPresentation, TerminalBackend, TerminalGeometry, TerminalPresenter, layout_math,
-    rasterize_presentation,
+    ImageSource, LayoutPolicy, LocalPngStore, LocalPngStoreLimits, MathGeometry, PresentationError,
+    PublishOutcome, RasterizedPresentation, TerminalBackend, TerminalGeometry, TerminalPresenter,
+    layout_math, rasterize_presentation,
 };
 
 const RECTANGLE: &[u8] = br##"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50" viewBox="0 0 100 50" role="img" focusable="false" style="color:#000000"><rect x="0" y="0" width="100" height="50" fill="currentColor"/></svg>"##;
@@ -45,6 +45,36 @@ fn job_rasterizes_and_publishes_the_exact_reserved_canvas() {
 
     assert!(command.contains("c=10,r=3"));
     assert!(command.contains("\x1b[6;36H"));
+    assert!(presenter.has_active_image());
+}
+
+#[test]
+fn local_backend_publishes_the_correlated_session_file() {
+    let svg =
+        sanitize_svg(RECTANGLE, SvgSanitizerLimits::default()).expect("rectangle should sanitize");
+    let mut presenter = TerminalPresenter::new(TerminalBackend::KittyLocalFile);
+    let job = presenter
+        .begin(IMAGE_ID, 3, display_layout())
+        .expect("generation should advance")
+        .expect("image backend should issue a job");
+    let raster = rasterize_presentation(&svg, job, RasterLimits::default())
+        .expect("presentation should rasterize");
+    let mut store = LocalPngStore::create(LocalPngStoreLimits::default())
+        .expect("session store should be created");
+    let source = store
+        .store_png(raster.png_bytes())
+        .expect("raster should be retained");
+    let outcome = presenter
+        .publish(raster, source)
+        .expect("local presentation should publish");
+    let PublishOutcome::Published(command) = outcome else {
+        panic!("current generation should publish");
+    };
+    let command = String::from_utf8(command).expect("protocol bytes should be UTF 8");
+
+    assert!(command.contains("t=f"));
+    assert!(command.contains("c=10,r=3"));
+    assert_eq!(store.file_count(), 1);
     assert!(presenter.has_active_image());
 }
 
