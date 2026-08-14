@@ -3,11 +3,12 @@
 use latex_render_core::RenderErrorCode;
 use latex_render_svg::{
     FittedRasterRequest, RasterLimits, RasterRect, RasterRequest, SvgSanitizerLimits,
-    rasterize_svg, rasterize_svg_fitted, sanitize_svg,
+    rasterize_svg, rasterize_svg_fitted, sanitize_svg, validate_png,
 };
 use tiny_skia::Pixmap;
 
 const FIXTURE: &[u8] = include_bytes!("../../../fixtures/terminal/quadratic-formula.svg");
+const PNG_FIXTURE: &[u8] = include_bytes!("../../../fixtures/terminal/quadratic-formula.png");
 const RECTANGLE: &[u8] = br##"<svg xmlns="http://www.w3.org/2000/svg" width="100" height="50" viewBox="0 0 100 50" role="img" focusable="false" style="color:#000000"><rect x="0" y="0" width="100" height="50" fill="currentColor"/></svg>"##;
 
 #[test]
@@ -32,6 +33,10 @@ fn fixture_rasterizes_to_deterministic_transparent_png() {
     assert_eq!(pixmap.width(), 512);
     assert_eq!(pixmap.height(), 128);
     assert!(pixmap.pixels().iter().any(|pixel| pixel.alpha() > 0));
+    assert_eq!(
+        validate_png(&first.bytes, RasterLimits::default()),
+        Ok(request)
+    );
 }
 
 #[test]
@@ -188,6 +193,26 @@ fn invalid_fitted_content_rectangles_fail_closed() {
     }
 }
 
+#[test]
+fn malformed_and_oversized_png_bytes_fail_before_publication() {
+    let malformed = png_header(1, 1);
+    let error = validate_png(&malformed, RasterLimits::default())
+        .expect_err("invalid CRC and missing image data should fail");
+    assert_eq!(error.code, RenderErrorCode::UnsafeOutput);
+
+    let oversized = png_header(4097, 1);
+    let error = validate_png(&oversized, RasterLimits::default())
+        .expect_err("oversized header should fail before decode");
+    assert_eq!(error.code, RenderErrorCode::OutputLimitExceeded);
+
+    let limits = RasterLimits {
+        max_png_bytes: 8,
+        ..RasterLimits::default()
+    };
+    let error = validate_png(PNG_FIXTURE, limits).expect_err("encoded byte limit should apply");
+    assert_eq!(error.code, RenderErrorCode::OutputLimitExceeded);
+}
+
 fn alpha_bounds(pixmap: &Pixmap) -> Option<(u32, u32, u32, u32)> {
     let mut bounds: Option<(u32, u32, u32, u32)> = None;
     for y in 0..pixmap.height() {
@@ -203,4 +228,16 @@ fn alpha_bounds(pixmap: &Pixmap) -> Option<(u32, u32, u32, u32)> {
         }
     }
     bounds
+}
+
+fn png_header(width: u32, height: u32) -> Vec<u8> {
+    let mut bytes = Vec::with_capacity(33);
+    bytes.extend_from_slice(b"\x89PNG\r\n\x1a\n");
+    bytes.extend_from_slice(&13_u32.to_be_bytes());
+    bytes.extend_from_slice(b"IHDR");
+    bytes.extend_from_slice(&width.to_be_bytes());
+    bytes.extend_from_slice(&height.to_be_bytes());
+    bytes.extend_from_slice(&[8, 6, 0, 0, 0]);
+    bytes.extend_from_slice(&[0; 4]);
+    bytes
 }
