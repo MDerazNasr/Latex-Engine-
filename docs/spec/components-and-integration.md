@@ -182,6 +182,14 @@ Capability detection must consider direct terminal use, SSH, `tmux`/`screen`
 passthrough, the alternate screen, and terminals that set misleading environment
 variables. Active capability probing must be optional and time-bounded.
 
+Passive Phase 2 detection selects direct Kitty transfer for known Kitty, WezTerm,
+and Ghostty sessions, including SSH because bytes remain on the TTY. It selects local
+file transfer only for iTerm2 3.6 or newer on the same host. iTerm2 over SSH, older or
+malformed iTerm2 versions, redirected output, `tmux`, Zellij, GNU Screen, and unknown
+terminals select source text with a stable fallback reason. Empty environment values
+do not count as detected facts. Backend and fallback reason expose stable lowercase
+diagnostic names.
+
 The terminal widget must:
 
 - reserve cells before placing an image;
