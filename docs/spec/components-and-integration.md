@@ -254,11 +254,12 @@ explicitly requests another format.
 
 ### 10.8 Standalone CLI
 
-The Phase 1 binary is named `latex-render` and exposes two commands:
+The binary is named `latex-render` and exposes three commands:
 
 ```text
 latex-render render [OPTIONS] [SOURCE]
 latex-render check [OPTIONS]
+latex-render doctor [OPTIONS]
 ```
 
 `render` reads one positional source value or, when the value is absent and stdin is
@@ -271,13 +272,18 @@ explicitly supplied.
 `check` starts the worker, validates its handshake, renders a fixed source-free
 smoke expression through the Rust sanitizer, rasterizes the result, and reports
 protocol, renderer, sanitizer, rasterizer, health, and active limit values as stable
-key-value lines. Terminal capability diagnostics remain the Phase 2 `doctor`
-command.
+key-value lines.
 
-Both commands accept `--worker PATH` and `--node PROGRAM`. Worker discovery checks an
-explicit path first, then `LATEX_RENDER_WORKER`, then packaged paths relative to the
-binary, then the development repository path. Arguments are passed directly to the
-worker process without shell interpretation.
+`doctor` performs the complete `check` pipeline and appends stable terminal fields:
+standard output TTY state, selected backend, fallback reason, SSH, tmux, Zellij, and
+GNU Screen facts. An unsupported terminal remains a successful diagnostic because
+source text is an intentional backend. Worker or native rendering failure retains
+the existing nonzero exit code and emits no partial report.
+
+All commands that use the worker accept `--worker PATH` and `--node PROGRAM`. Worker
+discovery checks an explicit path first, then `LATEX_RENDER_WORKER`, then packaged
+paths relative to the binary, then the development repository path. Arguments are
+passed directly to the worker process without shell interpretation.
 
 The CLI writes diagnostics only to stderr, never includes equation source in an
 error, and reserves stdout for command output. Exit status 2 identifies usage or
