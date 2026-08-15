@@ -14,6 +14,7 @@ use latex_render_svg::{
     RASTERIZER_VERSION, RasterLimits, RasterRequest, SVG_POLICY_VERSION_LABEL, SvgSanitizerLimits,
     rasterize_svg, sanitize_svg,
 };
+use latex_terminal::{TerminalEnvironment, detect_terminal_support};
 
 use crate::args::{CliCommand, OutputFormat, RenderOptions, WorkerOptions};
 use crate::error::{CliError, CliErrorKind};
@@ -24,6 +25,7 @@ pub(crate) async fn execute(command: CliCommand) -> Result<CommandOutput, CliErr
     match command {
         CliCommand::Render(options) => execute_render(options).await,
         CliCommand::Check(options) => execute_check(options).await,
+        CliCommand::Doctor(options) => execute_doctor(options).await,
     }
 }
 
@@ -86,6 +88,22 @@ async fn execute_check(options: WorkerOptions) -> Result<CommandOutput, CliError
     })
 }
 
+async fn execute_doctor(options: WorkerOptions) -> Result<CommandOutput, CliError> {
+    let checked = execute_check(options).await?;
+    let pipeline = String::from_utf8(checked.bytes).map_err(|_| {
+        CliError::new(
+            CliErrorKind::Internal,
+            "Check report did not contain valid UTF 8",
+        )
+    })?;
+    let environment = TerminalEnvironment::from_current_process(io::stdout().is_terminal());
+    Ok(CommandOutput {
+        bytes: doctor_report(pipeline, &environment)?.into_bytes(),
+        path: None,
+        force: false,
+    })
+}
+
 async fn render_once(
     options: &WorkerOptions,
     request: RenderRequest,
@@ -139,6 +157,35 @@ pub(crate) fn check_report(
     writeln!(report, "min_scale={}", limits.min_scale).map_err(report_error)?;
     writeln!(report, "max_scale={}", limits.max_scale).map_err(report_error)?;
     Ok(report)
+}
+
+pub(crate) fn doctor_report(
+    mut pipeline: String,
+    environment: &TerminalEnvironment,
+) -> Result<String, CliError> {
+    let support = detect_terminal_support(environment);
+    let fallback = support
+        .fallback_reason
+        .map(|reason| reason.diagnostic_name())
+        .unwrap_or("none");
+    writeln!(
+        pipeline,
+        "terminal_stdout_tty={}",
+        environment.stdout_is_terminal
+    )
+    .map_err(report_error)?;
+    writeln!(
+        pipeline,
+        "terminal_backend={}",
+        support.backend.diagnostic_name()
+    )
+    .map_err(report_error)?;
+    writeln!(pipeline, "terminal_fallback={fallback}").map_err(report_error)?;
+    writeln!(pipeline, "terminal_ssh={}", environment.ssh).map_err(report_error)?;
+    writeln!(pipeline, "terminal_tmux={}", environment.tmux).map_err(report_error)?;
+    writeln!(pipeline, "terminal_zellij={}", environment.zellij).map_err(report_error)?;
+    writeln!(pipeline, "terminal_screen={}", environment.screen).map_err(report_error)?;
+    Ok(pipeline)
 }
 
 fn report_error(_: std::fmt::Error) -> CliError {

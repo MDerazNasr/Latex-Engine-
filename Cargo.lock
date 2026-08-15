@@ -209,6 +209,7 @@ dependencies = [
  "latex-render-client",
  "latex-render-core",
  "latex-render-svg",
+ "latex-terminal",
  "tokio",
 ]
 

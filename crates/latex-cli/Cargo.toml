@@ -15,6 +15,7 @@ path = "src/main.rs"
 latex-render-client = { path = "../latex-render-client" }
 latex-render-core = { path = "../latex-render-core" }
 latex-render-svg = { path = "../latex-render-svg" }
+latex-terminal = { path = "../latex-terminal" }
 tokio = { version = "=1.53.1", features = ["macros", "rt"] }
 
 [lints]
