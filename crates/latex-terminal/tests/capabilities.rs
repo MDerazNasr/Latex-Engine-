@@ -77,14 +77,70 @@ fn old_or_malformed_iterm2_versions_use_text() {
 
 #[test]
 fn multiplexers_disable_an_underlying_image_terminal() {
-    assert_eq!(
-        detect_terminal_support(&TerminalEnvironment {
+    for environment in [
+        TerminalEnvironment {
             stdout_is_terminal: true,
             kitty_window: true,
             tmux: true,
             ..TerminalEnvironment::default()
+        },
+        TerminalEnvironment {
+            stdout_is_terminal: true,
+            kitty_window: true,
+            zellij: true,
+            ..TerminalEnvironment::default()
+        },
+        TerminalEnvironment {
+            stdout_is_terminal: true,
+            kitty_window: true,
+            screen: true,
+            ..TerminalEnvironment::default()
+        },
+    ] {
+        assert_eq!(
+            detect_terminal_support(&environment),
+            fallback(FallbackReason::Multiplexer),
+        );
+    }
+}
+
+#[test]
+fn ssh_disables_only_the_local_file_backend() {
+    assert_eq!(
+        detect_terminal_support(&TerminalEnvironment {
+            stdout_is_terminal: true,
+            term_program: Some("iTerm2".to_string()),
+            term_program_version: Some("3.6.10".to_string()),
+            ssh: true,
+            ..TerminalEnvironment::default()
         }),
-        fallback(FallbackReason::Multiplexer),
+        fallback(FallbackReason::RemoteFileUnavailable),
+    );
+    assert_eq!(
+        detect_terminal_support(&TerminalEnvironment {
+            stdout_is_terminal: true,
+            kitty_window: true,
+            ssh: true,
+            ..TerminalEnvironment::default()
+        }),
+        supported(TerminalBackend::KittyDirect),
+    );
+}
+
+#[test]
+fn diagnostic_names_are_stable_lowercase_values() {
+    assert_eq!(
+        TerminalBackend::KittyDirect.diagnostic_name(),
+        "kitty_direct"
+    );
+    assert_eq!(
+        TerminalBackend::KittyLocalFile.diagnostic_name(),
+        "kitty_local_file"
+    );
+    assert_eq!(TerminalBackend::Text.diagnostic_name(), "text");
+    assert_eq!(
+        FallbackReason::RemoteFileUnavailable.diagnostic_name(),
+        "remote_file_unavailable"
     );
 }
 
