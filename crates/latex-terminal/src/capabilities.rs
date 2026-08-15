@@ -13,6 +13,17 @@ pub enum TerminalBackend {
     Text,
 }
 
+impl TerminalBackend {
+    /// Returns the stable name used by diagnostics and configuration.
+    pub const fn diagnostic_name(self) -> &'static str {
+        match self {
+            Self::KittyDirect => "kitty_direct",
+            Self::KittyLocalFile => "kitty_local_file",
+            Self::Text => "text",
+        }
+    }
+}
+
 /// Reason automatic detection selected the text fallback.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FallbackReason {
@@ -22,8 +33,23 @@ pub enum FallbackReason {
     Multiplexer,
     /// The detected iTerm2 version predates Kitty graphics support.
     Iterm2TooOld,
+    /// Local file transfer cannot cross an SSH boundary.
+    RemoteFileUnavailable,
     /// No supported image protocol was detected.
     UnsupportedTerminal,
+}
+
+impl FallbackReason {
+    /// Returns the stable name used by diagnostics.
+    pub const fn diagnostic_name(self) -> &'static str {
+        match self {
+            Self::RedirectedOutput => "redirected_output",
+            Self::Multiplexer => "multiplexer",
+            Self::Iterm2TooOld => "iterm2_too_old",
+            Self::RemoteFileUnavailable => "remote_file_unavailable",
+            Self::UnsupportedTerminal => "unsupported_terminal",
+        }
+    }
 }
 
 /// Process facts used by deterministic capability detection.
@@ -45,6 +71,10 @@ pub struct TerminalEnvironment {
     pub tmux: bool,
     /// Whether Zellij is active.
     pub zellij: bool,
+    /// Whether GNU Screen is active.
+    pub screen: bool,
+    /// Whether the process is inside an SSH session.
+    pub ssh: bool,
 }
 
 impl TerminalEnvironment {
@@ -55,13 +85,14 @@ impl TerminalEnvironment {
             term: value("TERM"),
             term_program: value("TERM_PROGRAM"),
             term_program_version: value("TERM_PROGRAM_VERSION"),
-            kitty_window: env::var_os("KITTY_WINDOW_ID").is_some(),
-            wezterm: env::var_os("WEZTERM_EXECUTABLE").is_some()
-                || env::var_os("WEZTERM_VERSION").is_some(),
-            tmux: env::var_os("TMUX").is_some() || env::var_os("TMUX_PANE").is_some(),
-            zellij: env::var_os("ZELLIJ").is_some()
-                || env::var_os("ZELLIJ_SESSION_NAME").is_some()
-                || env::var_os("ZELLIJ_VERSION").is_some(),
+            kitty_window: present("KITTY_WINDOW_ID"),
+            wezterm: present("WEZTERM_EXECUTABLE") || present("WEZTERM_VERSION"),
+            tmux: present("TMUX") || present("TMUX_PANE"),
+            zellij: present("ZELLIJ")
+                || present("ZELLIJ_SESSION_NAME")
+                || present("ZELLIJ_VERSION"),
+            screen: present("STY") || field_contains(value("TERM").as_deref(), "screen"),
+            ssh: present("SSH_CLIENT") || present("SSH_CONNECTION") || present("SSH_TTY"),
         }
     }
 }
@@ -80,7 +111,7 @@ pub fn detect_terminal_support(environment: &TerminalEnvironment) -> TerminalSup
     if !environment.stdout_is_terminal {
         return fallback(FallbackReason::RedirectedOutput);
     }
-    if environment.tmux || environment.zellij {
+    if environment.tmux || environment.zellij || environment.screen {
         return fallback(FallbackReason::Multiplexer);
     }
     if environment.kitty_window
@@ -95,13 +126,15 @@ pub fn detect_terminal_support(environment: &TerminalEnvironment) -> TerminalSup
         return supported(TerminalBackend::KittyDirect);
     }
     if field_contains(environment.term_program.as_deref(), "iterm") {
-        return if version_at_least(
+        return if !version_at_least(
             environment.term_program_version.as_deref(),
             ITERM2_KITTY_MINIMUM,
         ) {
-            supported(TerminalBackend::KittyLocalFile)
-        } else {
             fallback(FallbackReason::Iterm2TooOld)
+        } else if environment.ssh {
+            fallback(FallbackReason::RemoteFileUnavailable)
+        } else {
+            supported(TerminalBackend::KittyLocalFile)
         };
     }
     fallback(FallbackReason::UnsupportedTerminal)
@@ -109,6 +142,10 @@ pub fn detect_terminal_support(environment: &TerminalEnvironment) -> TerminalSup
 
 fn value(name: &str) -> Option<String> {
     env::var(name).ok().filter(|value| !value.is_empty())
+}
+
+fn present(name: &str) -> bool {
+    env::var_os(name).is_some_and(|value| !value.is_empty())
 }
 
 fn field_contains(value: Option<&str>, needle: &str) -> bool {
