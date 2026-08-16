@@ -214,6 +214,13 @@ the MathJax baseline to align with the text baseline when available; block conte
 centered in both axes. A terminal column, row, cell-pixel, theme, or policy change
 creates a new layout generation and invalidates older raster and placement results.
 
+Theme resolution accepts `auto`, `light`, or `dark` plus the optional dark background
+hint already known by the host TUI. Auto follows that hint and defaults to dark when
+the host has no reliable appearance information. Dark uses opaque foreground
+`#e6edf3`; light uses opaque foreground `#111827`; both retain a transparent raster
+background. The resolved mode and colors enter render cache identity, and a resolved
+theme change must advance presentation generation before work begins.
+
 The layout contract returns presentation mode, reserved cells, pixel canvas, content
 rectangle, baseline, and horizontal placement. It never writes terminal control
 sequences; synchronized placement remains the caller's responsibility.
