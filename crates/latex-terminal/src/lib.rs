@@ -6,6 +6,7 @@ mod local_store;
 mod placement;
 mod presenter;
 mod protocol;
+mod theme;
 
 pub use capabilities::FallbackReason;
 pub use capabilities::TerminalBackend;
@@ -38,3 +39,7 @@ pub use protocol::ProtocolError;
 pub use protocol::kitty_delete_image;
 pub use protocol::kitty_transmit_png;
 pub use protocol::kitty_transmit_png_file;
+pub use theme::ResolvedMathTheme;
+pub use theme::TerminalAppearance;
+pub use theme::ThemeMode;
+pub use theme::resolve_math_theme;
