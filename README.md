@@ -3,11 +3,12 @@
 Render LaTeX mathematics automatically inside the Codex CLI instead of showing
 raw delimiters and commands.
 
-The independent Phase 1 renderer is implemented and under validation. It includes a
+The independent renderer and Phase 2 terminal presentation core are implemented and
+under validation. They include a
 streaming Markdown-aware segmenter, supervised MathJax worker, fail-closed SVG
-boundary, deterministic PNG rasterizer, bounded cache, terminal protocol spikes, and
-the standalone `latex-render` CLI. Automatic Codex transcript integration remains a
-later phase.
+boundary, deterministic PNG rasterizer, bounded cache, cell-aware layout, Kitty and
+iTerm2 presentation, capability detection, and the standalone `latex-render` CLI.
+Automatic Codex transcript integration remains a later phase.
 
 See [PROJECT_SPEC.md](PROJECT_SPEC.md) for the normative architecture, Codex
 integration strategy, security model, milestones, and acceptance criteria.
@@ -37,6 +38,12 @@ Validate the complete local pipeline:
 
 ```sh
 cargo run -p latex-cli -- check
+```
+
+Validate the pipeline and report terminal image support:
+
+```sh
+cargo run -p latex-cli -- doctor
 ```
 
 Render an equation to a new SVG or PNG artifact:
