@@ -59,9 +59,50 @@ fn missing_worker_is_a_worker_failure_without_a_report() {
     assert!(!String::from_utf8_lossy(&output.stderr).contains("x^2"));
 }
 
+#[test]
+fn doctor_runs_the_pipeline_and_reports_redirected_terminal_fallback() {
+    let output = doctor_command()
+        .args(["--worker"])
+        .arg(fake_worker())
+        .output()
+        .expect("CLI should run");
+
+    assert!(
+        output.status.success(),
+        "{}",
+        String::from_utf8_lossy(&output.stderr)
+    );
+    assert!(output.stderr.is_empty());
+    let report = String::from_utf8(output.stdout).expect("report should be UTF 8");
+    assert!(report.contains("status=ok\n"));
+    assert!(report.contains("worker_state=ready\n"));
+    assert!(report.contains("terminal_stdout_tty=false\n"));
+    assert!(report.contains("terminal_backend=text\n"));
+    assert!(report.contains("terminal_fallback=redirected_output\n"));
+    assert!(report.contains("terminal_ssh=false\n"));
+}
+
+#[test]
+fn doctor_pipeline_failure_emits_no_partial_terminal_report() {
+    let output = doctor_command()
+        .args(["--worker", "/path/that/does/not/exist/worker.js"])
+        .output()
+        .expect("CLI should run");
+
+    assert_eq!(output.status.code(), Some(3));
+    assert!(output.stdout.is_empty());
+    assert!(!String::from_utf8_lossy(&output.stderr).contains("terminal_backend"));
+}
+
 fn command() -> Command {
     let mut command = Command::new(env!("CARGO_BIN_EXE_latex-render"));
     command.arg("check");
+    command
+}
+
+fn doctor_command() -> Command {
+    let mut command = Command::new(env!("CARGO_BIN_EXE_latex-render"));
+    command.arg("doctor");
     command
 }
 
