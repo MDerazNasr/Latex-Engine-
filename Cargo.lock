@@ -258,6 +258,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "latex-terminal-smoke"
+version = "0.1.0"
+dependencies = [
+ "latex-render-client",
+ "latex-render-core",
+ "latex-render-svg",
+ "latex-terminal",
+ "tokio",
+]
+
+[[package]]
 name = "libc"
 version = "0.2.189"
 source = "registry+https://github.com/rust-lang/crates.io-index"
