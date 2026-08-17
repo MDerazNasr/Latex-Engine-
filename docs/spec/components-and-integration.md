@@ -190,6 +190,13 @@ terminals select source text with a stable fallback reason. Empty environment va
 do not count as detected facts. Backend and fallback reason expose stable lowercase
 diagnostic names.
 
+Phase 2 does not automatically select Sixel. The protocol has no targeted image
+identifier deletion equivalent, and the independent crate cannot guarantee
+transparent replacement and transcript reflow without a complete TUI cell redraw.
+Phase 3 will adapt Codex's existing deterministic Sixel encoder inside its owned
+redraw path with explicit output byte and cancellation limits. Until those replay
+tests pass, Sixel-only terminals use source text.
+
 The terminal widget must:
 
 - reserve cells before placing an image;
