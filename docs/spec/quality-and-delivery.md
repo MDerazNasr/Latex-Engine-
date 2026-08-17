@@ -259,6 +259,16 @@ Deliverables:
 - Terminal capability detection and `doctor` command.
 - Sixel investigation; include if stable within the milestone.
 
+The repository provides an internal `latex-terminal-smoke` binary for Phase 2
+acceptance. It runs one real worker render through theme resolution, sanitizer,
+measured layout, fitted rasterization, local asset preparation when required,
+generation checked publication, targeted cleanup, and alternate screen restoration.
+Image mode requires explicit terminal columns, rows, pixel width, and pixel height so
+the tool never guesses cell aspect. Auto mode preserves source when output is not a
+TTY or the detected backend is text. Forced Kitty and iTerm2 modes exist only for
+protocol capture and manual compatibility testing. An optional second geometry
+exercises replacement after resize.
+
 Exit criteria:
 
 - Representative equations render without stale images in supported terminals.
