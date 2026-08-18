@@ -46,6 +46,19 @@ Validate the pipeline and report terminal image support:
 cargo run -p latex-cli -- doctor
 ```
 
+Run the complete terminal presentation smoke path with measured cell and pixel
+geometry. Forced backends are intended for compatibility testing:
+
+```sh
+cargo run -p latex-terminal-smoke -- \
+  --backend kitty \
+  --geometry 120x40@1200x800 \
+  --resize-geometry 80x30@800x600
+```
+
+Use `--backend iterm2` for iTerm2 3.6 or newer. Automatic mode preserves source text
+when output is redirected or the detected terminal is unsupported.
+
 Render an equation to a new SVG or PNG artifact:
 
 ```sh
