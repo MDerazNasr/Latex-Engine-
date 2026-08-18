@@ -182,6 +182,21 @@ Capability detection must consider direct terminal use, SSH, `tmux`/`screen`
 passthrough, the alternate screen, and terminals that set misleading environment
 variables. Active capability probing must be optional and time-bounded.
 
+Passive Phase 2 detection selects direct Kitty transfer for known Kitty, WezTerm,
+and Ghostty sessions, including SSH because bytes remain on the TTY. It selects local
+file transfer only for iTerm2 3.6 or newer on the same host. iTerm2 over SSH, older or
+malformed iTerm2 versions, redirected output, `tmux`, Zellij, GNU Screen, and unknown
+terminals select source text with a stable fallback reason. Empty environment values
+do not count as detected facts. Backend and fallback reason expose stable lowercase
+diagnostic names.
+
+Phase 2 does not automatically select Sixel. The protocol has no targeted image
+identifier deletion equivalent, and the independent crate cannot guarantee
+transparent replacement and transcript reflow without a complete TUI cell redraw.
+Phase 3 will adapt Codex's existing deterministic Sixel encoder inside its owned
+redraw path with explicit output byte and cancellation limits. Until those replay
+tests pass, Sixel-only terminals use source text.
+
 The terminal widget must:
 
 - reserve cells before placing an image;
@@ -191,6 +206,50 @@ The terminal widget must:
 - recompute layout on terminal resize;
 - cap image width and height; and
 - restore terminal state after errors, panics, or interrupts.
+
+Phase 2 layout uses measured terminal columns, rows, pixel width, and pixel height.
+Zero or unavailable pixel measurements select source fallback instead of guessing a
+cell aspect ratio. Inline math is uniformly scaled down to at most one cell row and
+remains inline only when it fits the columns left on the current row. Other inline
+math is promoted to a centered block. Display math is always a centered block capped
+by `max_width_percent`, `max_height_rows`, and the visible viewport.
+
+The raster canvas exactly matches the reserved cell rectangle in measured pixels.
+Equation content is uniformly scaled without upscaling and placed on that transparent
+canvas, so Kitty `c,r` placement cannot distort its aspect ratio. Inline content uses
+the MathJax baseline to align with the text baseline when available; block content is
+centered in both axes. A terminal column, row, cell-pixel, theme, or policy change
+creates a new layout generation and invalidates older raster and placement results.
+
+Theme resolution accepts `auto`, `light`, or `dark` plus the optional dark background
+hint already known by the host TUI. Auto follows that hint and defaults to dark when
+the host has no reliable appearance information. Dark uses opaque foreground
+`#e6edf3`; light uses opaque foreground `#111827`; both retain a transparent raster
+background. The resolved mode and colors enter render cache identity, and a resolved
+theme change must advance presentation generation before work begins.
+
+The layout contract returns presentation mode, reserved cells, pixel canvas, content
+rectangle, baseline, and horizontal placement. It never writes terminal control
+sequences; synchronized placement remains the caller's responsibility.
+
+The presentation adapter owns a monotonically increasing generation and active image
+state. Starting a render returns an immutable job that contains generation, backend,
+placement identity, row, layout, and the fitted raster request. Raster completion
+must carry the same job back to the adapter. Publication succeeds only when its
+generation and backend are still current and the PNG dimensions equal the reserved
+canvas. Stale completion emits no terminal bytes. A valid completion is converted to
+the backend specific source and passed through the deterministic placement state so
+replacement deletes the prior image before drawing the new one. Cancellation,
+backend changes, and explicit fallback invalidate pending jobs and expose cleanup
+bytes without suppressing the canonical source.
+
+The iTerm2 Kitty implementation uses local file transmission. Generated PNG files
+live in one private session directory beneath the operating system temporary
+directory. The store uses content addressed names, exclusive creation, bounded file
+count and total bytes, and retains every published file until terminal presentation
+shuts down. It removes only its uniquely created directory on drop. Creation,
+capacity, write, or validation failure selects source fallback. Direct Kitty
+transmission never creates a local file.
 
 ### 10.7 Text fallback
 
@@ -209,11 +268,12 @@ explicitly requests another format.
 
 ### 10.8 Standalone CLI
 
-The Phase 1 binary is named `latex-render` and exposes two commands:
+The binary is named `latex-render` and exposes three commands:
 
 ```text
 latex-render render [OPTIONS] [SOURCE]
 latex-render check [OPTIONS]
+latex-render doctor [OPTIONS]
 ```
 
 `render` reads one positional source value or, when the value is absent and stdin is
@@ -226,13 +286,18 @@ explicitly supplied.
 `check` starts the worker, validates its handshake, renders a fixed source-free
 smoke expression through the Rust sanitizer, rasterizes the result, and reports
 protocol, renderer, sanitizer, rasterizer, health, and active limit values as stable
-key-value lines. Terminal capability diagnostics remain the Phase 2 `doctor`
-command.
+key-value lines.
 
-Both commands accept `--worker PATH` and `--node PROGRAM`. Worker discovery checks an
-explicit path first, then `LATEX_RENDER_WORKER`, then packaged paths relative to the
-binary, then the development repository path. Arguments are passed directly to the
-worker process without shell interpretation.
+`doctor` performs the complete `check` pipeline and appends stable terminal fields:
+standard output TTY state, selected backend, fallback reason, SSH, tmux, Zellij, and
+GNU Screen facts. An unsupported terminal remains a successful diagnostic because
+source text is an intentional backend. Worker or native rendering failure retains
+the existing nonzero exit code and emits no partial report.
+
+All commands that use the worker accept `--worker PATH` and `--node PROGRAM`. Worker
+discovery checks an explicit path first, then `LATEX_RENDER_WORKER`, then packaged
+paths relative to the binary, then the development repository path. Arguments are
+passed directly to the worker process without shell interpretation.
 
 The CLI writes diagnostics only to stderr, never includes equation source in an
 error, and reserves stdout for command output. Exit status 2 identifies usage or

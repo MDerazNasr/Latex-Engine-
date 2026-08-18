@@ -1,4 +1,4 @@
-//! Strict argument parsing for the two standalone commands.
+//! Strict argument parsing for the standalone commands.
 
 use std::ffi::OsString;
 use std::path::PathBuf;
@@ -11,10 +11,12 @@ pub(crate) const ROOT_HELP: &str = "\
 Codex LaTeX renderer\n\n\
 Usage:\n\
   latex-render render [OPTIONS] [SOURCE]\n\
-  latex-render check [OPTIONS]\n\n\
+  latex-render check [OPTIONS]\n\
+  latex-render doctor [OPTIONS]\n\n\
 Commands:\n\
   render  Render one TeX math fragment to SVG or PNG\n\
-  check   Validate the worker and native rendering pipeline\n\n\
+  check   Validate the worker and native rendering pipeline\n\
+  doctor  Diagnose rendering and terminal image support\n\n\
 Run 'latex-render COMMAND --help' for command options.\n";
 
 pub(crate) const RENDER_HELP: &str = "\
@@ -44,6 +46,15 @@ Options:\n\
   --node PROGRAM  Select the Node.js executable, default node\n\
   -h, --help      Show this help\n";
 
+pub(crate) const DOCTOR_HELP: &str = "\
+Diagnose rendering and terminal image support\n\n\
+Usage:\n\
+  latex-render doctor [OPTIONS]\n\n\
+Options:\n\
+  --worker PATH   Select the MathJax worker script\n\
+  --node PROGRAM  Select the Node.js executable, default node\n\
+  -h, --help      Show this help\n";
+
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum ParsedArgs {
     Text(String),
@@ -54,6 +65,7 @@ pub(crate) enum ParsedArgs {
 pub(crate) enum CliCommand {
     Render(RenderOptions),
     Check(WorkerOptions),
+    Doctor(WorkerOptions),
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -120,7 +132,8 @@ pub(crate) fn parse_args(arguments: Vec<OsString>) -> Result<ParsedArgs, CliErro
         ))),
         Some("render") => parse_render(remaining),
         Some("check") => parse_check(remaining),
-        Some(_) => Err(usage("Expected the render or check command")),
+        Some("doctor") => parse_doctor(remaining),
+        Some(_) => Err(usage("Expected the render, check, or doctor command")),
         None => Err(usage("Command must contain valid UTF 8")),
     }
 }
@@ -252,16 +265,31 @@ fn parse_render_option(
 }
 
 fn parse_check(arguments: &[OsString]) -> Result<ParsedArgs, CliError> {
+    parse_worker_command(arguments, "Check", CHECK_HELP, CliCommand::Check)
+}
+
+fn parse_doctor(arguments: &[OsString]) -> Result<ParsedArgs, CliError> {
+    parse_worker_command(arguments, "Doctor", DOCTOR_HELP, CliCommand::Doctor)
+}
+
+fn parse_worker_command(
+    arguments: &[OsString],
+    command_name: &str,
+    help: &str,
+    command: impl FnOnce(WorkerOptions) -> CliCommand,
+) -> Result<ParsedArgs, CliError> {
     let mut options = WorkerOptions::default();
     let mut seen_worker = false;
     let mut seen_node = false;
     let mut index = 0usize;
     while index < arguments.len() {
-        let option = arguments[index]
-            .to_str()
-            .ok_or_else(|| usage("Check option names must contain valid UTF 8"))?;
+        let option = arguments[index].to_str().ok_or_else(|| {
+            usage(format!(
+                "{command_name} option names must contain valid UTF 8"
+            ))
+        })?;
         match option {
-            "-h" | "--help" => return Ok(ParsedArgs::Text(CHECK_HELP.to_owned())),
+            "-h" | "--help" => return Ok(ParsedArgs::Text(help.to_owned())),
             "--worker" => {
                 set_once(&mut seen_worker, "worker")?;
                 options.worker = Some(next_path(arguments, index, option)?);
@@ -272,10 +300,15 @@ fn parse_check(arguments: &[OsString]) -> Result<ParsedArgs, CliError> {
                 options.node = next_path(arguments, index, option)?;
                 index += 2;
             }
-            _ => return Err(usage(format!("Unknown check option {option}"))),
+            _ => {
+                return Err(usage(format!(
+                    "Unknown {} option {option}",
+                    command_name.to_ascii_lowercase()
+                )));
+            }
         }
     }
-    Ok(ParsedArgs::Command(CliCommand::Check(options)))
+    Ok(ParsedArgs::Command(command(options)))
 }
 
 fn next_text<'a>(

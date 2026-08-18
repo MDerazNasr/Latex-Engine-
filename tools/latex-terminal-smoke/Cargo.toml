@@ -1,0 +1,18 @@
+[package]
+name = "latex-terminal-smoke"
+description = "End to end terminal presentation acceptance tool"
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+rust-version.workspace = true
+version.workspace = true
+
+[dependencies]
+latex-render-client = { path = "../../crates/latex-render-client" }
+latex-render-core = { path = "../../crates/latex-render-core" }
+latex-render-svg = { path = "../../crates/latex-render-svg" }
+latex-terminal = { path = "../../crates/latex-terminal" }
+tokio = { version = "=1.53.1", features = ["macros", "rt", "time"] }
+
+[lints]
+workspace = true

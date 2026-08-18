@@ -15,7 +15,7 @@ fn root_help_and_version_are_successful_text() {
     let help = parse_args(values(&[])).expect("empty arguments should show help");
     let version = parse_args(values(&["--version"])).expect("version should parse");
 
-    assert!(matches!(help, ParsedArgs::Text(text) if text.contains("Usage:")));
+    assert!(matches!(help, ParsedArgs::Text(text) if text.contains("doctor [OPTIONS]")));
     assert!(matches!(version, ParsedArgs::Text(text) if text == "latex-render 0.1.0\n"));
 }
 
@@ -116,6 +116,26 @@ fn check_accepts_only_worker_selection() {
 }
 
 #[test]
+fn doctor_accepts_worker_selection_and_has_command_help() {
+    let parsed = parse_args(values(&[
+        "doctor",
+        "--worker",
+        "worker.js",
+        "--node",
+        "nodejs",
+    ]))
+    .expect("doctor should parse");
+    let ParsedArgs::Command(CliCommand::Doctor(options)) = parsed else {
+        panic!("doctor command should be returned");
+    };
+    assert_eq!(options.worker, Some(PathBuf::from("worker.js")));
+    assert_eq!(options.node, PathBuf::from("nodejs"));
+
+    let help = parse_args(values(&["doctor", "--help"])).expect("help should parse");
+    assert!(matches!(help, ParsedArgs::Text(text) if text.contains("terminal image support")));
+}
+
+#[test]
 fn malformed_null_and_duplicate_values_are_usage_errors() {
     let cases = [
         values(&["unknown"]),
@@ -131,6 +151,8 @@ fn malformed_null_and_duplicate_values_are_usage_errors() {
         values(&["render", "--display", "--display", "x"]),
         values(&["check", "source"]),
         values(&["check", "--worker", "a", "--worker", "b"]),
+        values(&["doctor", "source"]),
+        values(&["doctor", "--node", "a", "--node", "b"]),
         values(&["--version", "extra"]),
     ];
 
