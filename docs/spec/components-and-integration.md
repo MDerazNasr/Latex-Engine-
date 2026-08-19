@@ -268,12 +268,13 @@ explicitly requests another format.
 
 ### 10.8 Standalone CLI
 
-The binary is named `latex-render` and exposes three commands:
+The binary is named `latex-render` and exposes four commands:
 
 ```text
 latex-render render [OPTIONS] [SOURCE]
 latex-render check [OPTIONS]
 latex-render doctor [OPTIONS]
+latex-render daemon [OPTIONS]
 ```
 
 `render` reads one positional source value or, when the value is absent and stdin is
@@ -304,6 +305,43 @@ error, and reserves stdout for command output. Exit status 2 identifies usage or
 input errors, 3 identifies worker configuration or lifecycle errors, 4 identifies
 render, sanitizer, or raster errors, 5 identifies output errors, and 6 identifies an
 unexpected internal task failure.
+
+### 10.9 Codex renderer daemon
+
+Phase 3 adds an internal `latex-render daemon` command so an independently built
+Codex checkout can use one persistent renderer without Cargo path dependencies. The
+daemon accepts `--worker PATH` and `--node PROGRAM`, reads newline-delimited JSON from
+standard input, writes only newline-delimited JSON to standard output, and reserves
+standard error for redacted diagnostics. End of input triggers clean worker shutdown.
+
+Protocol version 1 has one method, `render_message`. A request contains a bounded
+correlation ID, complete canonical Markdown source, single-dollar policy, foreground,
+transparent or opaque background, scale, and maximum width. Unknown fields, methods,
+versions, colors, nonfinite numbers, oversized lines or messages, and unsafe control
+characters are rejected without starting a render.
+
+The daemon segments source with `latex-segmenter`, preserves segment order, and
+renders at most 32 equations through one supervised worker. A successful response
+contains an ordered outcome for each equation with its complete delimiter byte span,
+display mode, PNG dimensions, optional baseline, accessibility text, and bounded
+base64 PNG. One equation failure produces a source-fallback outcome with a stable
+lowercase error code and retryable flag while other equations continue. A response
+never repeats equation source.
+
+```json
+{"protocol":1,"id":"message-42","method":"render_message","params":{"source":"Use \\(x^2\\).","inlineDollars":"smart","foreground":"#e6edf3","background":"transparent","scale":2,"maxWidthPx":1200}}
+```
+
+```json
+{"protocol":1,"id":"message-42","ok":true,"result":{"equations":[{"startByte":4,"endByte":11,"displayMode":false,"status":"rendered","pngBase64":"iVBORw0KGgo...","widthPx":64,"heightPx":32,"baselinePx":24,"accessibilityText":"x squared"}]}}
+```
+
+Top-level parse, version, method, and message-limit failures use `ok:false`, preserve
+the request ID when safely decoded, and contain no source. Input is processed serially
+for bounded backpressure; Codex owns the asynchronous queue that keeps daemon work off
+the TUI thread. The daemon owns segmentation, worker supervision, SVG sanitization,
+rasterization, byte limits, and child shutdown. Codex owns source-backed layout,
+request generations, terminal publication, cancellation, and source fallback.
 
 ## 11. Codex TUI integration specification
 
