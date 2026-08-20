@@ -196,5 +196,7 @@ fn all_daemon_limits_match_the_committed_contract() {
     assert_eq!(MAX_DAEMON_EQUATIONS, 32);
     assert_eq!(MAX_DAEMON_PNG_BYTES, 4 * 1024 * 1024);
     assert_eq!(MAX_DAEMON_TOTAL_PNG_BYTES, 8 * 1024 * 1024);
+    assert_eq!(MAX_DAEMON_ACCESSIBILITY_BYTES, 64 * 1024);
+    assert_eq!(MAX_DAEMON_TOTAL_ACCESSIBILITY_BYTES, 256 * 1024);
     assert_eq!(MAX_DAEMON_RESPONSE_LINE_BYTES, 12 * 1024 * 1024);
 }

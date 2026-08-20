@@ -11,6 +11,8 @@ pub(crate) const MAX_DAEMON_MESSAGE_BYTES: usize = 256 * 1024;
 pub(crate) const MAX_DAEMON_EQUATIONS: usize = 32;
 pub(crate) const MAX_DAEMON_PNG_BYTES: usize = 4 * 1024 * 1024;
 pub(crate) const MAX_DAEMON_TOTAL_PNG_BYTES: usize = 8 * 1024 * 1024;
+pub(crate) const MAX_DAEMON_ACCESSIBILITY_BYTES: usize = 64 * 1024;
+pub(crate) const MAX_DAEMON_TOTAL_ACCESSIBILITY_BYTES: usize = 256 * 1024;
 pub(crate) const MAX_DAEMON_RESPONSE_LINE_BYTES: usize = 12 * 1024 * 1024;
 
 const MAX_DAEMON_ID_BYTES: usize = 128;

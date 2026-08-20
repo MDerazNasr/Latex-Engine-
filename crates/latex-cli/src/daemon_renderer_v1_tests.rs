@@ -29,12 +29,17 @@ impl MathRenderer for FakeRenderer {
             } else {
                 RECTANGLE.to_vec()
             };
+            let accessibility_text = if request.source == "verbose" {
+                "a".repeat(100)
+            } else {
+                "rendered math".to_owned()
+            };
             Ok(RenderedMath {
                 svg,
                 width_px: 100,
                 height_px: 50,
                 baseline_px: Some(35.0),
-                accessibility_text: "rendered math".to_owned(),
+                accessibility_text,
                 cache_key: format!("key-{}", request.source),
             })
         })
@@ -185,6 +190,52 @@ async fn aggregate_png_limit_stops_later_render_work() {
         .unwrap();
 
     assert_eq!(outcomes.len(), 2);
+    assert!(outcomes.iter().all(|outcome| matches!(
+        outcome,
+        EquationOutcomeV1::Failed {
+            error: DaemonErrorV1 { code, .. },
+            ..
+        } if code == "output_limit_exceeded"
+    )));
+    assert_eq!(renderer.requests.lock().unwrap().len(), 1);
+}
+
+#[tokio::test]
+async fn accessibility_limits_fail_before_response_serialization() {
+    let renderer = FakeRenderer::default();
+    let request = request_for("\\(verbose\\) \\(later\\)");
+    let limits = DaemonRenderLimitsV1 {
+        max_accessibility_bytes: 20,
+        ..DaemonRenderLimitsV1::default()
+    };
+
+    let outcomes = render_message_with_limits_v1(&renderer, request, limits)
+        .await
+        .unwrap();
+
+    assert!(matches!(
+        &outcomes[0],
+        EquationOutcomeV1::Failed {
+            error: DaemonErrorV1 { code, .. },
+            ..
+        } if code == "output_limit_exceeded"
+    ));
+    assert!(matches!(&outcomes[1], EquationOutcomeV1::Rendered { .. }));
+}
+
+#[tokio::test]
+async fn aggregate_accessibility_limit_stops_later_render_work() {
+    let renderer = FakeRenderer::default();
+    let request = request_for("\\(one\\) \\(two\\)");
+    let limits = DaemonRenderLimitsV1 {
+        max_total_accessibility_bytes: 1,
+        ..DaemonRenderLimitsV1::default()
+    };
+
+    let outcomes = render_message_with_limits_v1(&renderer, request, limits)
+        .await
+        .unwrap();
+
     assert!(outcomes.iter().all(|outcome| matches!(
         outcome,
         EquationOutcomeV1::Failed {

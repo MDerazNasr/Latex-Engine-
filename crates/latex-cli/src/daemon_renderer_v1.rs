@@ -21,8 +21,10 @@ use latex_segmenter::SegmenterConfig;
 use crate::daemon_protocol_v1::DaemonErrorV1;
 use crate::daemon_protocol_v1::EquationOutcomeV1;
 use crate::daemon_protocol_v1::InlineDollarsV1;
+use crate::daemon_protocol_v1::MAX_DAEMON_ACCESSIBILITY_BYTES;
 use crate::daemon_protocol_v1::MAX_DAEMON_EQUATIONS;
 use crate::daemon_protocol_v1::MAX_DAEMON_PNG_BYTES;
+use crate::daemon_protocol_v1::MAX_DAEMON_TOTAL_ACCESSIBILITY_BYTES;
 use crate::daemon_protocol_v1::MAX_DAEMON_TOTAL_PNG_BYTES;
 use crate::daemon_protocol_v1::ValidatedRenderMessageV1;
 use crate::daemon_protocol_v1::error;
@@ -32,6 +34,8 @@ struct DaemonRenderLimitsV1 {
     max_equations: usize,
     max_png_bytes: usize,
     max_total_png_bytes: usize,
+    max_accessibility_bytes: usize,
+    max_total_accessibility_bytes: usize,
 }
 
 impl Default for DaemonRenderLimitsV1 {
@@ -40,6 +44,8 @@ impl Default for DaemonRenderLimitsV1 {
             max_equations: MAX_DAEMON_EQUATIONS,
             max_png_bytes: MAX_DAEMON_PNG_BYTES,
             max_total_png_bytes: MAX_DAEMON_TOTAL_PNG_BYTES,
+            max_accessibility_bytes: MAX_DAEMON_ACCESSIBILITY_BYTES,
+            max_total_accessibility_bytes: MAX_DAEMON_TOTAL_ACCESSIBILITY_BYTES,
         }
     }
 }
@@ -63,6 +69,7 @@ async fn render_message_with_limits_v1(
 
     let mut outcomes = Vec::with_capacity(equations.len());
     let mut total_png_bytes = 0usize;
+    let mut total_accessibility_bytes = 0usize;
     let mut aggregate_limit_reached = false;
     for segment in equations {
         if aggregate_limit_reached {
@@ -73,10 +80,23 @@ async fn render_message_with_limits_v1(
             continue;
         }
 
-        match render_equation(renderer, &request, &segment, limits.max_png_bytes).await {
+        match render_equation(
+            renderer,
+            &request,
+            &segment,
+            limits.max_png_bytes,
+            limits.max_accessibility_bytes,
+        )
+        .await
+        {
             Ok(rendered) => {
                 let next_total = total_png_bytes.checked_add(rendered.png.len());
-                if next_total.is_none_or(|bytes| bytes > limits.max_total_png_bytes) {
+                let next_accessibility_total =
+                    total_accessibility_bytes.checked_add(rendered.accessibility_text.len());
+                if next_total.is_none_or(|bytes| bytes > limits.max_total_png_bytes)
+                    || next_accessibility_total
+                        .is_none_or(|bytes| bytes > limits.max_total_accessibility_bytes)
+                {
                     aggregate_limit_reached = true;
                     outcomes.push(failed_outcome(
                         &segment,
@@ -85,6 +105,8 @@ async fn render_message_with_limits_v1(
                     continue;
                 }
                 total_png_bytes = next_total.expect("aggregate PNG length was validated");
+                total_accessibility_bytes =
+                    next_accessibility_total.expect("aggregate accessibility length was validated");
                 outcomes.push(EquationOutcomeV1::rendered(
                     segment.span.start..segment.span.end,
                     matches!(segment.kind, SegmentKind::DisplayMath),
@@ -128,6 +150,7 @@ async fn render_equation(
     message: &ValidatedRenderMessageV1,
     segment: &Segment,
     max_png_bytes: usize,
+    max_accessibility_bytes: usize,
 ) -> Result<RenderedEquationV1, RenderError> {
     let request = RenderRequest {
         source: segment.content.clone(),
@@ -139,6 +162,13 @@ async fn render_equation(
     };
     let rendered = renderer.render(request).await?;
     rendered.validate(&RenderLimits::default())?;
+    if rendered.accessibility_text.len() > max_accessibility_bytes {
+        return Err(RenderError::new(
+            RenderErrorCode::OutputLimitExceeded,
+            "Accessibility text exceeds its byte limit",
+            false,
+        ));
+    }
     let width_px = rendered.width_px;
     let height_px = rendered.height_px;
     let baseline_px = rendered.baseline_px;

@@ -52,8 +52,9 @@ Suggested initial hard limits, subject to benchmark validation:
 
 The Phase 3 daemon additionally limits one request line to 1 MiB, canonical Markdown
 source to 256 KiB, recognized equations to 32, one PNG to 4 MiB, aggregate PNG bytes
-to 8 MiB, and one response line to 12 MiB. Limit failures preserve source in Codex
-and never emit a partial JSON line.
+to 8 MiB, accessibility text to 64 KiB per equation and 256 KiB aggregate, and one
+response line to 12 MiB. Limit failures preserve source in Codex and never emit a
+partial JSON line.
 
 If the queue is full, later expressions fall back to source rather than blocking
 Codex.

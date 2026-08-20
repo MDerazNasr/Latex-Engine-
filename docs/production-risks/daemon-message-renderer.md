@@ -8,10 +8,11 @@
   or return unsafe terminal assets.
 - Mitigation: Protocol validation bounds the message, the renderer rejects more than
   32 equations before work, render core validates every request and result, the SVG
-  allowlist runs before native rasterization, and per-image plus aggregate PNG caps
-  convert only affected equations to source fallback.
+  allowlist runs before native rasterization, and per-image, accessibility, plus
+  aggregate response caps convert only affected equations to source fallback.
 - Test coverage: Tests cover the equation limit, invalid TeX continuation, unsafe SVG
-  continuation, decodable PNG output, and aggregate capacity stopping later work.
+  continuation, decodable PNG output, accessibility limits, and aggregate capacity
+  stopping later work.
 
 ## 2. Source policy or state transitions select the wrong byte range
 
@@ -37,4 +38,3 @@
 - Test coverage: Unit tests cover renderer failure and unsafe raster input. Real
   worker exit, timeout, process cancellation, and shutdown remain required process
   tests for the daemon loop.
-
