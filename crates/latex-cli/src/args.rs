@@ -12,11 +12,13 @@ Codex LaTeX renderer\n\n\
 Usage:\n\
   latex-render render [OPTIONS] [SOURCE]\n\
   latex-render check [OPTIONS]\n\
-  latex-render doctor [OPTIONS]\n\n\
+  latex-render doctor [OPTIONS]\n\
+  latex-render daemon [OPTIONS]\n\n\
 Commands:\n\
   render  Render one TeX math fragment to SVG or PNG\n\
   check   Validate the worker and native rendering pipeline\n\
-  doctor  Diagnose rendering and terminal image support\n\n\
+  doctor  Diagnose rendering and terminal image support\n\
+  daemon  Serve the versioned local Codex rendering protocol\n\n\
 Run 'latex-render COMMAND --help' for command options.\n";
 
 pub(crate) const RENDER_HELP: &str = "\
@@ -55,6 +57,15 @@ Options:\n\
   --node PROGRAM  Select the Node.js executable, default node\n\
   -h, --help      Show this help\n";
 
+pub(crate) const DAEMON_HELP: &str = "\
+Serve the versioned local Codex rendering protocol\n\n\
+Usage:\n\
+  latex-render daemon [OPTIONS]\n\n\
+Options:\n\
+  --worker PATH   Select the MathJax worker script\n\
+  --node PROGRAM  Select the Node.js executable, default node\n\
+  -h, --help      Show this help\n";
+
 #[derive(Clone, Debug, PartialEq)]
 pub(crate) enum ParsedArgs {
     Text(String),
@@ -66,6 +77,7 @@ pub(crate) enum CliCommand {
     Render(RenderOptions),
     Check(WorkerOptions),
     Doctor(WorkerOptions),
+    Daemon(WorkerOptions),
 }
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
@@ -133,7 +145,10 @@ pub(crate) fn parse_args(arguments: Vec<OsString>) -> Result<ParsedArgs, CliErro
         Some("render") => parse_render(remaining),
         Some("check") => parse_check(remaining),
         Some("doctor") => parse_doctor(remaining),
-        Some(_) => Err(usage("Expected the render, check, or doctor command")),
+        Some("daemon") => parse_daemon(remaining),
+        Some(_) => Err(usage(
+            "Expected the render, check, doctor, or daemon command",
+        )),
         None => Err(usage("Command must contain valid UTF 8")),
     }
 }
@@ -270,6 +285,10 @@ fn parse_check(arguments: &[OsString]) -> Result<ParsedArgs, CliError> {
 
 fn parse_doctor(arguments: &[OsString]) -> Result<ParsedArgs, CliError> {
     parse_worker_command(arguments, "Doctor", DOCTOR_HELP, CliCommand::Doctor)
+}
+
+fn parse_daemon(arguments: &[OsString]) -> Result<ParsedArgs, CliError> {
+    parse_worker_command(arguments, "Daemon", DAEMON_HELP, CliCommand::Daemon)
 }
 
 fn parse_worker_command(

@@ -17,6 +17,7 @@ use latex_render_svg::{
 use latex_terminal::{TerminalEnvironment, detect_terminal_support};
 
 use crate::args::{CliCommand, OutputFormat, RenderOptions, WorkerOptions};
+use crate::daemon_v1::run_daemon_v1;
 use crate::error::{CliError, CliErrorKind};
 use crate::output::CommandOutput;
 use crate::worker_path::resolve_worker;
@@ -26,6 +27,14 @@ pub(crate) async fn execute(command: CliCommand) -> Result<CommandOutput, CliErr
         CliCommand::Render(options) => execute_render(options).await,
         CliCommand::Check(options) => execute_check(options).await,
         CliCommand::Doctor(options) => execute_doctor(options).await,
+        CliCommand::Daemon(options) => {
+            run_daemon_v1(&options).await?;
+            Ok(CommandOutput {
+                bytes: Vec::new(),
+                path: None,
+                force: false,
+            })
+        }
     }
 }
 
