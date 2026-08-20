@@ -4,6 +4,8 @@ mod app;
 mod args;
 #[cfg(test)]
 mod daemon_protocol_v1;
+#[cfg(test)]
+mod daemon_renderer_v1;
 mod error;
 mod output;
 mod worker_path;

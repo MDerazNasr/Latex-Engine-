@@ -206,9 +206,11 @@ dependencies = [
 name = "latex-cli"
 version = "0.1.0"
 dependencies = [
+ "base64",
  "latex-render-client",
  "latex-render-core",
  "latex-render-svg",
+ "latex-segmenter",
  "latex-terminal",
  "serde",
  "serde_json",
