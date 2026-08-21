@@ -34,5 +34,6 @@
   every render failure becomes a complete response, every serve exit attempts bounded
   worker shutdown, and output failure stops the loop without exposing source.
 - Test coverage: Unit tests cover idle runtime progress, render error continuation,
-  short output writes, and broken output pipes. The real-process suite must verify EOF
-  shutdown, worker exit, timeout, and process reaping before Phase 3 acceptance.
+  short output writes, and broken output pipes. Process tests verify EOF shutdown,
+  worker exit markers, clean reaping, and the built MathJax pipeline. Render-client
+  process tests cover crash recovery, timeouts, cancellation, and bounded shutdown.

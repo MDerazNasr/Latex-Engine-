@@ -35,6 +35,6 @@
 - Mitigation: Every renderer error maps to a stable per-equation code, blocking task
   join failure maps to `render_failed`, and later equations continue. The daemon loop
   must own EOF shutdown and Codex must cancel or kill the daemon on generation loss.
-- Test coverage: Unit tests cover renderer failure and unsafe raster input. Real
-  worker exit, timeout, process cancellation, and shutdown remain required process
-  tests for the daemon loop.
+- Test coverage: Unit tests cover renderer failure and unsafe raster input. Process
+  tests cover real worker rendering, worker exit, timeout, cancellation, EOF, and
+  shutdown through the daemon and supervised render client.

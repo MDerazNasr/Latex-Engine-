@@ -24,8 +24,8 @@
   line per request. Codex must additionally match the bounded correlation ID and its
   own immutable message generation before accepting an outcome.
 - Test coverage: Serialization tests assert exact response IDs, ordered equation
-  arrays, byte spans, and stable success and failure shapes. Runtime ordering tests
-  are required with the daemon loop feature.
+  arrays, byte spans, and stable success and failure shapes. Daemon loop and process
+  tests verify serial response order and correlation across malformed input.
 
 ## 3. Async worker failure leaves an incomplete or uncorrelated response
 
@@ -37,5 +37,5 @@
   errors without source. The runtime must serialize a complete bounded line before
   writing, flush it, map every async error, and shut down the supervised child on EOF.
 - Test coverage: Protocol tests cover failure serialization and source omission.
-  Worker exit, timeout, partial output, EOF, and shutdown are mandatory runtime tests.
-
+  Runtime tests cover worker exit and timeout, partial output writes, EOF, process
+  reaping, and bounded shutdown.
