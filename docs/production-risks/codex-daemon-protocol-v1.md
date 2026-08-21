@@ -34,5 +34,6 @@
   and complete PNG decoding pass. The supervisor must add bounded queueing, timeouts,
   cancellation checks, restart throttling, and child reaping before production use.
 - Test coverage: Decoder tests cover invalid base64, corrupt and mismatched PNG data,
-  decoded pixel limits, and aggregate bounds. Supervisor lifecycle tests are required
-  before the test-only protocol candidate is enabled in production.
+  decoded pixel limits, and aggregate bounds. Supervisor tests now cover timeouts,
+  cancellation, restart throttling, shutdown, and the real engine daemon. The adapter
+  remains test-only until the source-backed presentation controller consumes it.
