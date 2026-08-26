@@ -5,12 +5,18 @@ use std::path::PathBuf;
 
 use crate::bundle_v1::StageOptionsV1;
 use crate::error_v1::PackageErrorV1;
+use crate::install_v1::InstallOptionsV1;
+use crate::install_v1::UninstallOptionsV1;
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 /// Selects one versioned packaging operation.
 pub enum CommandV1 {
     /// Stages a new developer bundle at an unused path.
     Stage(StageOptionsV1),
+    /// Installs a verified bundle under an explicit prefix.
+    Install(InstallOptionsV1),
+    /// Removes the active manifest owned bundle from a prefix.
+    Uninstall(UninstallOptionsV1),
 }
 
 /// Parses packaging arguments without consulting process state.
@@ -21,10 +27,17 @@ pub fn parse_command_v1(
     let command = arguments
         .next()
         .ok_or_else(|| usage_error("missing command"))?;
-    if command != "stage" {
-        return Err(usage_error("unknown command"));
+    match command.to_str() {
+        Some("stage") => parse_stage_v1(arguments),
+        Some("install") => parse_install_v1(arguments),
+        Some("uninstall") => parse_uninstall_v1(arguments),
+        _ => Err(usage_error("unknown or non Unicode command")),
     }
+}
 
+fn parse_stage_v1(
+    mut arguments: impl Iterator<Item = OsString>,
+) -> Result<CommandV1, PackageErrorV1> {
     let mut options = ParsedStageOptionsV1::default();
     while let Some(flag) = arguments.next() {
         let value = arguments
@@ -45,6 +58,45 @@ pub fn parse_command_v1(
     }
 
     Ok(CommandV1::Stage(options.finish()?))
+}
+
+fn parse_install_v1(
+    mut arguments: impl Iterator<Item = OsString>,
+) -> Result<CommandV1, PackageErrorV1> {
+    let mut bundle = None;
+    let mut prefix = None;
+    while let Some(flag) = arguments.next() {
+        let value = arguments
+            .next()
+            .ok_or_else(|| usage_error("every option requires a value"))?;
+        match flag.to_str() {
+            Some("--bundle") => set_once(&mut bundle, value, &flag)?,
+            Some("--prefix") => set_once(&mut prefix, value, &flag)?,
+            _ => return Err(usage_error("unknown or non Unicode option")),
+        }
+    }
+    Ok(CommandV1::Install(InstallOptionsV1 {
+        bundle: required_path(bundle, "--bundle")?,
+        prefix: required_path(prefix, "--prefix")?,
+    }))
+}
+
+fn parse_uninstall_v1(
+    mut arguments: impl Iterator<Item = OsString>,
+) -> Result<CommandV1, PackageErrorV1> {
+    let mut prefix = None;
+    while let Some(flag) = arguments.next() {
+        let value = arguments
+            .next()
+            .ok_or_else(|| usage_error("every option requires a value"))?;
+        match flag.to_str() {
+            Some("--prefix") => set_once(&mut prefix, value, &flag)?,
+            _ => return Err(usage_error("unknown or non Unicode option")),
+        }
+    }
+    Ok(CommandV1::Uninstall(UninstallOptionsV1 {
+        prefix: required_path(prefix, "--prefix")?,
+    }))
 }
 
 #[derive(Default)]
@@ -102,7 +154,7 @@ fn required_text(value: Option<OsString>, name: &str) -> Result<String, PackageE
 
 fn usage_error(reason: &str) -> PackageErrorV1 {
     PackageErrorV1::new(format!(
-        "{reason}. Usage: codex-latex-package stage --codex-binary PATH --renderer-binary PATH --worker-dist PATH --mathjax-module PATH --output PATH --version VERSION --target TARGET"
+        "{reason}. Usage: codex-latex-package stage OPTIONS | install --bundle PATH --prefix PATH | uninstall --prefix PATH"
     ))
 }
 

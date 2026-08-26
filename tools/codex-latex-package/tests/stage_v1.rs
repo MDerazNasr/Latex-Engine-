@@ -1,10 +1,6 @@
 //! Verifies the complete versioned bundle staging boundary.
 
 use std::fs;
-use std::path::Path;
-use std::path::PathBuf;
-use std::sync::atomic::AtomicU64;
-use std::sync::atomic::Ordering;
 
 #[cfg(unix)]
 use std::os::unix::fs::symlink;
@@ -13,7 +9,9 @@ use codex_latex_package::BundleManifestV1;
 use codex_latex_package::StageOptionsV1;
 use codex_latex_package::stage_bundle_v1;
 
-static NEXT_DIRECTORY: AtomicU64 = AtomicU64::new(1);
+use support::TestDirectory;
+
+mod support;
 
 #[test]
 fn stage_builds_a_hashed_source_safe_runtime_layout() {
@@ -151,41 +149,4 @@ fn module_links_must_resolve_within_the_owned_node_modules_root() {
 
     assert!(result.is_err());
     assert!(!output.exists());
-}
-
-struct TestDirectory {
-    path: PathBuf,
-}
-
-impl TestDirectory {
-    fn new() -> Self {
-        let id = NEXT_DIRECTORY.fetch_add(1, Ordering::Relaxed);
-        let path = std::env::temp_dir().join(format!(
-            "codex-latex-package-stage-{}-{id}",
-            std::process::id()
-        ));
-        fs::create_dir(&path).expect("unique test directory");
-        Self { path }
-    }
-
-    fn directory(&self, relative: impl AsRef<Path>) -> PathBuf {
-        let path = self.path.join(relative);
-        fs::create_dir_all(&path).expect("fixture directory");
-        path
-    }
-
-    fn write(&self, relative: impl AsRef<Path>, bytes: &[u8]) -> PathBuf {
-        let path = self.path.join(relative);
-        if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent).expect("fixture parent");
-        }
-        fs::write(&path, bytes).expect("fixture file");
-        path
-    }
-}
-
-impl Drop for TestDirectory {
-    fn drop(&mut self) {
-        let _ = fs::remove_dir_all(&self.path);
-    }
 }

@@ -22,7 +22,9 @@ fn stage_command_requires_every_value_once() {
         "aarch64-apple-darwin",
     ]))
     .expect("valid command");
-    let CommandV1::Stage(options) = command;
+    let CommandV1::Stage(options) = command else {
+        panic!("expected stage command");
+    };
     assert_eq!(options.output, PathBuf::from("bundle"));
     assert_eq!(options.version, "0.1.0");
 }
@@ -37,6 +39,22 @@ fn missing_duplicate_and_unknown_options_fail_closed() {
     ] {
         assert!(parse_command_v1(arguments).is_err());
     }
+}
+
+#[test]
+fn install_and_uninstall_commands_require_explicit_paths() {
+    let install = parse_command_v1(words(&[
+        "install", "--bundle", "bundle", "--prefix", "prefix",
+    ]))
+    .expect("install command");
+    assert!(matches!(install, CommandV1::Install(_)));
+
+    let uninstall =
+        parse_command_v1(words(&["uninstall", "--prefix", "prefix"])).expect("uninstall command");
+    assert!(matches!(uninstall, CommandV1::Uninstall(_)));
+
+    assert!(parse_command_v1(words(&["install", "--bundle", "bundle"])).is_err());
+    assert!(parse_command_v1(words(&["uninstall"])).is_err());
 }
 
 fn words(values: &[&str]) -> Vec<OsString> {

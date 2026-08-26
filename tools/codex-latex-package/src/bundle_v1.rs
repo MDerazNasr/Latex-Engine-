@@ -13,6 +13,7 @@ use crate::filesystem_v1::require_regular_file_v1;
 use crate::manifest_v1::BundleManifestV1;
 use crate::manifest_v1::build_manifest_v1;
 use crate::manifest_v1::write_manifest_v1;
+use crate::validation_v1::validate_label_v1;
 
 const WORKER_DESTINATION_V1: &str = "share/latex-render/mathjax-worker";
 
@@ -104,18 +105,6 @@ fn validate_options_v1(options: &StageOptionsV1) -> Result<(), PackageErrorV1> {
     validate_label_v1(&options.target, "target")
 }
 
-fn validate_label_v1(value: &str, label: &str) -> Result<(), PackageErrorV1> {
-    if value.is_empty()
-        || value.len() > 64
-        || !value
-            .bytes()
-            .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'.' | b'_' | b'-'))
-    {
-        return Err(PackageErrorV1::new(format!("bundle {label} is invalid")));
-    }
-    Ok(())
-}
-
 fn validate_manifest_shape_v1(manifest: &BundleManifestV1) -> Result<(), PackageErrorV1> {
     let required = [
         "bin/codex-latex",
@@ -162,7 +151,3 @@ impl Drop for IncompleteBundleV1 {
         }
     }
 }
-
-#[cfg(test)]
-#[path = "bundle_v1_tests.rs"]
-mod tests;
