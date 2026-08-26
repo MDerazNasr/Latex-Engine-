@@ -1,0 +1,9 @@
+# Experimental bundle installation production risks
+
+Feature commit: `2c9fed9`
+
+1. A missing manifest, null prefix, path traversal, duplicate or unsorted ownership record, unsupported protocol, oversized package, unexpected file, symbolic link, or changed digest could install content outside the intended runtime. Manifest decoding rejects unknown fields and applies file-count, path, hash, per-file, and aggregate bounds before any prefix mutation, then verifies the installed copy again before entry points become visible.
+2. Concurrent installers, an existing user command, or an entry point changed during rollback could cause one installation to overwrite another or remove an unrelated command. Version roots and entry points use create-new semantics, installation never creates a `codex` entry point, cleanup guards unlink only the exact target they created, and uninstallation revalidates both active links immediately before removal.
+3. Copy, permission, link creation, verification, partial uninstall, or directory cleanup could fail after asynchronous build orchestration has handed over the package. The installer owns an isolated version root, removes incomplete roots on failure, rolls back a partially created entry pair, propagates every unexpected cleanup error, and refuses rollback when any file is missing, changed, linked, or unowned.
+
+Focused verification: five unit tests, four staging integration tests, four installation and rollback integration tests, and a real command-process stage, install, and uninstall round trip passed. Coverage preserves a preexisting normal `codex`, rejects entry collisions and tampered packages, refuses to delete unowned files, and confirms both experimental entry points resolve into one bundle. Strict Clippy, Rust formatting, diff hygiene, one-way dependency review, and the 500-line file limit passed.
