@@ -38,13 +38,19 @@ the caller explicitly opts in.
 
 Installation copies the complete bundle into an isolated version directory under an
 explicit prefix and creates only `codex-latex` and `latex-render` entry points. It
-never creates or replaces an entry point named `codex`. Uninstallation removes only
-paths owned by the installed manifest and exact entry points that still target that
-bundle.
+also creates one worker activation link at
+`share/latex-render/mathjax-worker`, because macOS can report the invoked entry point
+path to `current_exe` instead of resolving the version root. The activation link
+targets the worker inside the same versioned bundle and preserves the daemon's
+existing packaged lookup contract. Installation never creates or replaces an entry
+point named `codex`. Uninstallation removes only paths owned by the installed
+manifest and exact links that still target that bundle.
 
 ## Consequences
 
 - The experimental build has a distinct invocation and an explicit rollback path.
+- Renderer discovery works whether `current_exe` reports the isolated binary or its
+  prefix entry point.
 - Codex and the renderer remain separate builds connected only by protocol v1.
 - MVP users must provide Node.js 22 or newer at runtime.
 - The bundle can later be archived per target without changing its internal
