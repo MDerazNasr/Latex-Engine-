@@ -23,13 +23,17 @@ codex-latex-0.1.0-<target>/
   bin/latex-render
   share/latex-render/mathjax-worker/server.js
   share/latex-render/mathjax-worker/node_modules/mathjax/
+  share/latex-render/mathjax-worker/node_modules/@mathjax/mathjax-newcm-font/
   manifest-v1.json
 ```
 
 The package copies the experimental Codex binary under the distinct name
 `codex-latex`. It keeps `latex-render` beside that binary so Codex discovery is
 independent from the caller's `PATH`. The MathJax worker remains a separate locked
-Node.js runtime asset under the daemon's existing packaged lookup path.
+Node.js runtime asset under the daemon's existing packaged lookup path. Staging
+copies both the MathJax module and its locked runtime font module explicitly,
+because materializing only the pnpm MathJax link omits dependencies stored beside
+that link.
 
 A source build script creates the artifacts and delegates staging to a small Rust
 packaging tool. The tool validates regular files, rejects escaping or cyclic module
