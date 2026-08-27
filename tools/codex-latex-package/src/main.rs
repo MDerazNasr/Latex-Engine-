@@ -3,6 +3,7 @@
 use std::process::ExitCode;
 
 use codex_latex_package::CommandV1;
+use codex_latex_package::build_bundle_v1;
 use codex_latex_package::install_bundle_v1;
 use codex_latex_package::parse_command_v1;
 use codex_latex_package::stage_bundle_v1;
@@ -20,6 +21,10 @@ fn main() -> ExitCode {
 
 fn run() -> Result<(), Box<dyn std::error::Error>> {
     match parse_command_v1(std::env::args_os().skip(1))? {
+        CommandV1::Build(options) => {
+            let output = build_bundle_v1(&options)?;
+            println!("{}", output.display());
+        }
         CommandV1::Stage(options) => {
             let output = stage_bundle_v1(&options)?;
             println!("{}", output.display());

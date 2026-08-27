@@ -57,6 +57,33 @@ fn install_and_uninstall_commands_require_explicit_paths() {
     assert!(parse_command_v1(words(&["uninstall"])).is_err());
 }
 
+#[test]
+fn build_command_requires_both_source_roots_and_output_identity() {
+    let build = parse_command_v1(words(&[
+        "build",
+        "--engine-root",
+        "engine",
+        "--codex-checkout",
+        "codex",
+        "--output",
+        "bundle",
+        "--version",
+        "0.1.0",
+    ]))
+    .expect("build command");
+    assert!(matches!(build, CommandV1::Build(_)));
+    assert!(
+        parse_command_v1(words(&[
+            "build",
+            "--engine-root",
+            "engine",
+            "--codex-checkout",
+            "codex",
+        ]))
+        .is_err()
+    );
+}
+
 fn words(values: &[&str]) -> Vec<OsString> {
     values.iter().map(OsString::from).collect()
 }

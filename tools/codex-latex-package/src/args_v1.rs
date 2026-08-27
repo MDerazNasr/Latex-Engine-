@@ -3,6 +3,7 @@
 use std::ffi::OsString;
 use std::path::PathBuf;
 
+use crate::build_v1::BuildOptionsV1;
 use crate::bundle_v1::StageOptionsV1;
 use crate::error_v1::PackageErrorV1;
 use crate::install_v1::InstallOptionsV1;
@@ -11,6 +12,8 @@ use crate::install_v1::UninstallOptionsV1;
 #[derive(Clone, Debug, Eq, PartialEq)]
 /// Selects one versioned packaging operation.
 pub enum CommandV1 {
+    /// Builds locked sources and stages a new developer bundle.
+    Build(BuildOptionsV1),
     /// Stages a new developer bundle at an unused path.
     Stage(StageOptionsV1),
     /// Installs a verified bundle under an explicit prefix.
@@ -28,11 +31,39 @@ pub fn parse_command_v1(
         .next()
         .ok_or_else(|| usage_error("missing command"))?;
     match command.to_str() {
+        Some("build") => parse_build_v1(arguments),
         Some("stage") => parse_stage_v1(arguments),
         Some("install") => parse_install_v1(arguments),
         Some("uninstall") => parse_uninstall_v1(arguments),
         _ => Err(usage_error("unknown or non Unicode command")),
     }
+}
+
+fn parse_build_v1(
+    mut arguments: impl Iterator<Item = OsString>,
+) -> Result<CommandV1, PackageErrorV1> {
+    let mut engine_root = None;
+    let mut codex_checkout = None;
+    let mut output = None;
+    let mut version = None;
+    while let Some(flag) = arguments.next() {
+        let value = arguments
+            .next()
+            .ok_or_else(|| usage_error("every option requires a value"))?;
+        match flag.to_str() {
+            Some("--engine-root") => set_once(&mut engine_root, value, &flag)?,
+            Some("--codex-checkout") => set_once(&mut codex_checkout, value, &flag)?,
+            Some("--output") => set_once(&mut output, value, &flag)?,
+            Some("--version") => set_once(&mut version, value, &flag)?,
+            _ => return Err(usage_error("unknown or non Unicode option")),
+        }
+    }
+    Ok(CommandV1::Build(BuildOptionsV1 {
+        engine_root: required_path(engine_root, "--engine-root")?,
+        codex_checkout: required_path(codex_checkout, "--codex-checkout")?,
+        output: required_path(output, "--output")?,
+        version: required_text(version, "--version")?,
+    }))
 }
 
 fn parse_stage_v1(
@@ -154,7 +185,7 @@ fn required_text(value: Option<OsString>, name: &str) -> Result<String, PackageE
 
 fn usage_error(reason: &str) -> PackageErrorV1 {
     PackageErrorV1::new(format!(
-        "{reason}. Usage: codex-latex-package stage OPTIONS | install --bundle PATH --prefix PATH | uninstall --prefix PATH"
+        "{reason}. Usage: codex-latex-package build OPTIONS | stage OPTIONS | install --bundle PATH --prefix PATH | uninstall --prefix PATH"
     ))
 }
 
