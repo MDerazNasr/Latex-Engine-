@@ -171,6 +171,10 @@ fn command_line_dispatches_stage_install_and_uninstall() {
     fixture.write("cli-inputs/worker/server.js", b"import 'mathjax';\n");
     let mathjax = fixture.directory("cli-inputs/node_modules/mathjax");
     fixture.write("cli-inputs/node_modules/mathjax/package.json", b"{}\n");
+    fixture.write(
+        "cli-inputs/node_modules/@mathjax/mathjax-newcm-font/package.json",
+        b"{}\n",
+    );
     let bundle = fixture.path.join("cli-bundle");
     let prefix = fixture.path.join("cli-prefix");
     let executable = env!("CARGO_BIN_EXE_codex-latex-package");
@@ -246,6 +250,10 @@ fn stage_fixture(fixture: &TestDirectory, name: &str) -> std::path::PathBuf {
     fixture.write(
         format!("{input}/node_modules/mathjax/index.js"),
         b"export {};\n",
+    );
+    fixture.write(
+        format!("{input}/node_modules/@mathjax/mathjax-newcm-font/package.json"),
+        b"{}\n",
     );
     let output = fixture.path.join(name);
     stage_bundle_v1(&StageOptionsV1 {

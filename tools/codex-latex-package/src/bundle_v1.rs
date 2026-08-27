@@ -39,6 +39,7 @@ pub struct StageOptionsV1 {
 /// Stages a complete bundle and publishes its manifest last.
 pub fn stage_bundle_v1(options: &StageOptionsV1) -> Result<PathBuf, PackageErrorV1> {
     validate_options_v1(options)?;
+    let mathjax_font_module = resolve_mathjax_font_module_v1(&options.mathjax_module)?;
     let parent = options
         .output
         .parent()
@@ -69,6 +70,11 @@ pub fn stage_bundle_v1(options: &StageOptionsV1) -> Result<PathBuf, PackageError
     copy_tree_v1(
         &options.mathjax_module,
         &worker.join("node_modules/mathjax"),
+        module_root,
+    )?;
+    copy_tree_v1(
+        &mathjax_font_module,
+        &worker.join("node_modules/@mathjax/mathjax-newcm-font"),
         module_root,
     )?;
     let package = serde_json::to_vec_pretty(&json!({
@@ -111,6 +117,7 @@ fn validate_manifest_shape_v1(manifest: &BundleManifestV1) -> Result<(), Package
         "bin/latex-render",
         "share/latex-render/mathjax-worker/server.js",
         "share/latex-render/mathjax-worker/node_modules/mathjax/package.json",
+        "share/latex-render/mathjax-worker/node_modules/@mathjax/mathjax-newcm-font/package.json",
     ];
     if required.iter().all(|required| {
         manifest
@@ -124,6 +131,17 @@ fn validate_manifest_shape_v1(manifest: &BundleManifestV1) -> Result<(), Package
             "bundle is missing a required runtime file",
         ))
     }
+}
+
+fn resolve_mathjax_font_module_v1(mathjax_module: &Path) -> Result<PathBuf, PackageErrorV1> {
+    let resolved = fs::canonicalize(mathjax_module)
+        .map_err(|error| PackageErrorV1::io("MathJax module resolution failed", error))?;
+    let font_module = resolved
+        .parent()
+        .ok_or_else(|| PackageErrorV1::new("MathJax module has no dependency root"))?
+        .join("@mathjax/mathjax-newcm-font");
+    require_regular_file_v1(&font_module.join("package.json"), "MathJax font module")?;
+    Ok(font_module)
 }
 
 struct IncompleteBundleV1 {

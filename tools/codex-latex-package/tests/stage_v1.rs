@@ -25,6 +25,14 @@ fn stage_builds_a_hashed_source_safe_runtime_layout() {
     let mathjax = fixture.directory("inputs/node_modules/mathjax");
     fixture.write("inputs/node_modules/mathjax/package.json", b"{}\n");
     fixture.write("inputs/node_modules/mathjax/index.js", b"export {};\n");
+    fixture.write(
+        "inputs/node_modules/@mathjax/mathjax-newcm-font/package.json",
+        b"{}\n",
+    );
+    fixture.write(
+        "inputs/node_modules/@mathjax/mathjax-newcm-font/svg.js",
+        b"export {};\n",
+    );
     let output = fixture.path.join("codex-latex-0.1.0-test");
 
     stage_bundle_v1(&StageOptionsV1 {
@@ -45,6 +53,13 @@ fn stage_builds_a_hashed_source_safe_runtime_layout() {
     assert_eq!(
         fs::read(output.join("share/latex-render/mathjax-worker/server.js")).unwrap(),
         b"import 'mathjax';\n"
+    );
+    assert_eq!(
+        fs::read(output.join(
+            "share/latex-render/mathjax-worker/node_modules/@mathjax/mathjax-newcm-font/svg.js"
+        ))
+        .unwrap(),
+        b"export {};\n"
     );
     let manifest: BundleManifestV1 =
         serde_json::from_slice(&fs::read(output.join("manifest-v1.json")).expect("manifest bytes"))
@@ -97,6 +112,10 @@ fn module_links_inside_the_owned_root_are_materialized() {
         "inputs/node_modules/.store/mathjax/index.js",
         b"export {};\n",
     );
+    fixture.write(
+        "inputs/node_modules/.store/@mathjax/mathjax-newcm-font/package.json",
+        b"{}\n",
+    );
     let mathjax = modules.join("mathjax");
     symlink(".store/mathjax", &mathjax).expect("owned module link");
     let output = fixture.path.join("linked-bundle");
@@ -133,6 +152,7 @@ fn module_links_must_resolve_within_the_owned_node_modules_root() {
     let modules = fixture.directory("inputs/node_modules");
     fixture.directory("outside/mathjax");
     fixture.write("outside/mathjax/package.json", b"{}\n");
+    fixture.write("outside/@mathjax/mathjax-newcm-font/package.json", b"{}\n");
     let mathjax = modules.join("mathjax");
     symlink(fixture.path.join("outside/mathjax"), &mathjax).expect("escaping module link");
     let output = fixture.path.join("escaped-bundle");
