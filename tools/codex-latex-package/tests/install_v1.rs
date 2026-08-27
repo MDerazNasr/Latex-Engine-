@@ -38,6 +38,15 @@ fn install_and_uninstall_preserve_the_normal_codex_entrypoint() {
         fs::canonicalize(&installed.renderer_entrypoint).unwrap(),
         fs::canonicalize(installed.installed_root.join("bin/latex-render")).unwrap()
     );
+    assert_eq!(
+        fs::canonicalize(&installed.worker_entrypoint).unwrap(),
+        fs::canonicalize(
+            installed
+                .installed_root
+                .join("share/latex-render/mathjax-worker")
+        )
+        .unwrap()
+    );
 
     let removed = uninstall_bundle_v1(&UninstallOptionsV1 {
         prefix: prefix.clone(),
@@ -47,6 +56,7 @@ fn install_and_uninstall_preserve_the_normal_codex_entrypoint() {
     assert!(!removed.exists());
     assert!(!installed.codex_entrypoint.exists());
     assert!(!installed.renderer_entrypoint.exists());
+    assert!(fs::symlink_metadata(&installed.worker_entrypoint).is_err());
     assert_eq!(fs::read(prefix.join("bin/codex")).unwrap(), b"normal-codex");
 }
 
@@ -68,6 +78,27 @@ fn install_refuses_existing_entrypoints_without_mutation() {
         b"keep-existing"
     );
     assert!(!prefix.join("libexec/codex-latex").exists());
+}
+
+#[test]
+fn install_refuses_an_existing_worker_activation_without_mutation() {
+    let fixture = TestDirectory::new();
+    let bundle = stage_fixture(&fixture, "bundle");
+    let prefix = fixture.directory("prefix");
+    fixture.write("prefix/share/latex-render/mathjax-worker", b"keep-existing");
+
+    let result = install_bundle_v1(&InstallOptionsV1 {
+        bundle,
+        prefix: prefix.clone(),
+    });
+
+    assert!(result.is_err());
+    assert_eq!(
+        fs::read(prefix.join("share/latex-render/mathjax-worker")).unwrap(),
+        b"keep-existing"
+    );
+    assert!(!prefix.join("libexec/codex-latex").exists());
+    assert!(!prefix.join("bin/codex-latex").exists());
 }
 
 #[test]
@@ -102,6 +133,32 @@ fn tampered_or_unowned_files_block_installation_and_rollback() {
     assert_eq!(
         fs::read(installed.installed_root.join("unowned.txt")).unwrap(),
         b"keep"
+    );
+}
+
+#[test]
+fn changed_worker_activation_blocks_rollback_without_removing_the_bundle() {
+    let fixture = TestDirectory::new();
+    let bundle = stage_fixture(&fixture, "bundle");
+    let prefix = fixture.directory("prefix");
+    let installed = install_bundle_v1(&InstallOptionsV1 {
+        bundle,
+        prefix: prefix.clone(),
+    })
+    .expect("bundle installs");
+    fs::remove_file(&installed.worker_entrypoint).unwrap();
+    let unrelated_worker = fixture.directory("unrelated-worker");
+    std::os::unix::fs::symlink(&unrelated_worker, &installed.worker_entrypoint).unwrap();
+
+    let result = uninstall_bundle_v1(&UninstallOptionsV1 { prefix });
+
+    assert!(result.is_err());
+    assert!(installed.codex_entrypoint.exists());
+    assert!(installed.renderer_entrypoint.exists());
+    assert!(installed.installed_root.exists());
+    assert_eq!(
+        fs::canonicalize(&installed.worker_entrypoint).unwrap(),
+        fs::canonicalize(unrelated_worker).unwrap()
     );
 }
 
@@ -160,6 +217,7 @@ fn command_line_dispatches_stage_install_and_uninstall() {
         String::from_utf8_lossy(&install.stderr)
     );
     assert!(prefix.join("bin/codex-latex").exists());
+    assert!(prefix.join("share/latex-render/mathjax-worker").exists());
 
     let uninstall = Command::new(executable)
         .args(["uninstall", "--prefix", prefix.to_str().unwrap()])
@@ -171,6 +229,7 @@ fn command_line_dispatches_stage_install_and_uninstall() {
         String::from_utf8_lossy(&uninstall.stderr)
     );
     assert!(fs::symlink_metadata(prefix.join("bin/codex-latex")).is_err());
+    assert!(fs::symlink_metadata(prefix.join("share/latex-render/mathjax-worker")).is_err());
 }
 
 fn stage_fixture(fixture: &TestDirectory, name: &str) -> std::path::PathBuf {

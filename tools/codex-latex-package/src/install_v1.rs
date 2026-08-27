@@ -14,6 +14,8 @@ use crate::manifest_v1::read_manifest_v1;
 use crate::manifest_v1::verify_manifest_files_v1;
 
 const INSTALL_BASE_V1: &str = "libexec/codex-latex";
+const WORKER_ENTRYPOINT_V1: &str = "share/latex-render/mathjax-worker";
+const WORKER_BUNDLE_PATH_V1: &str = "share/latex-render/mathjax-worker";
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 /// Selects a verified bundle and an explicit installation prefix.
@@ -33,6 +35,8 @@ pub struct InstallResultV1 {
     pub codex_entrypoint: PathBuf,
     /// Identifies the renderer entry point.
     pub renderer_entrypoint: PathBuf,
+    /// Identifies the worker activation entry point.
+    pub worker_entrypoint: PathBuf,
 }
 
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -50,14 +54,19 @@ pub fn install_bundle_v1(options: &InstallOptionsV1) -> Result<InstallResultV1, 
     let install_root = install_root_v1(&options.prefix, &manifest);
     let codex_entrypoint = options.prefix.join("bin/codex-latex");
     let renderer_entrypoint = options.prefix.join("bin/latex-render");
+    let worker_entrypoint = options.prefix.join(WORKER_ENTRYPOINT_V1);
     require_absent_v1(&install_root, "installed bundle")?;
     require_absent_v1(&codex_entrypoint, "Codex LaTeX entry point")?;
     require_absent_v1(&renderer_entrypoint, "renderer entry point")?;
+    require_absent_v1(&worker_entrypoint, "worker activation entry point")?;
 
     fs::create_dir_all(options.prefix.join(INSTALL_BASE_V1))
         .map_err(|error| PackageErrorV1::io("installation base creation failed", error))?;
     fs::create_dir_all(options.prefix.join("bin"))
         .map_err(|error| PackageErrorV1::io("entry point directory creation failed", error))?;
+    fs::create_dir_all(options.prefix.join("share/latex-render")).map_err(|error| {
+        PackageErrorV1::io("worker activation directory creation failed", error)
+    })?;
     fs::create_dir(&install_root)
         .map_err(|error| PackageErrorV1::io("installed bundle reservation failed", error))?;
     let install_guard = IncompleteInstallV1::new(install_root.clone());
@@ -73,10 +82,16 @@ pub fn install_bundle_v1(options: &InstallOptionsV1) -> Result<InstallResultV1, 
     let key = bundle_key_v1(&manifest);
     let codex_target = PathBuf::from(format!("../{INSTALL_BASE_V1}/{key}/bin/codex-latex"));
     let renderer_target = PathBuf::from(format!("../{INSTALL_BASE_V1}/{key}/bin/latex-render"));
+    let worker_target = PathBuf::from(format!(
+        "../../{INSTALL_BASE_V1}/{key}/{WORKER_BUNDLE_PATH_V1}"
+    ));
     create_symlink_v1(&codex_target, &codex_entrypoint)?;
     let codex_guard = EntryPointGuardV1::new(codex_entrypoint.clone(), codex_target);
     create_symlink_v1(&renderer_target, &renderer_entrypoint)?;
     let renderer_guard = EntryPointGuardV1::new(renderer_entrypoint.clone(), renderer_target);
+    create_symlink_v1(&worker_target, &worker_entrypoint)?;
+    let worker_guard = EntryPointGuardV1::new(worker_entrypoint.clone(), worker_target);
+    worker_guard.keep();
     renderer_guard.keep();
     codex_guard.keep();
     install_guard.keep();
@@ -85,6 +100,7 @@ pub fn install_bundle_v1(options: &InstallOptionsV1) -> Result<InstallResultV1, 
         installed_root: install_root,
         codex_entrypoint,
         renderer_entrypoint,
+        worker_entrypoint,
     })
 }
 
@@ -93,8 +109,10 @@ pub fn uninstall_bundle_v1(options: &UninstallOptionsV1) -> Result<PathBuf, Pack
     validate_prefix_v1(&options.prefix)?;
     let codex_entrypoint = options.prefix.join("bin/codex-latex");
     let renderer_entrypoint = options.prefix.join("bin/latex-render");
+    let worker_entrypoint = options.prefix.join(WORKER_ENTRYPOINT_V1);
     let codex_target = resolve_owned_entrypoint_v1(&codex_entrypoint)?;
     let renderer_target = resolve_owned_entrypoint_v1(&renderer_entrypoint)?;
+    let worker_target = resolve_owned_entrypoint_v1(&worker_entrypoint)?;
     let install_root = codex_target
         .parent()
         .and_then(Path::parent)
@@ -102,6 +120,7 @@ pub fn uninstall_bundle_v1(options: &UninstallOptionsV1) -> Result<PathBuf, Pack
         .to_path_buf();
     if renderer_target != install_root.join("bin/latex-render")
         || codex_target != install_root.join("bin/codex-latex")
+        || worker_target != install_root.join(WORKER_BUNDLE_PATH_V1)
     {
         return Err(PackageErrorV1::new(
             "entry points do not identify one installed bundle",
@@ -119,7 +138,11 @@ pub fn uninstall_bundle_v1(options: &UninstallOptionsV1) -> Result<PathBuf, Pack
     let reported_root = install_root_v1(&options.prefix, &manifest);
     verify_entrypoint_v1(&codex_entrypoint, &codex_target)?;
     verify_entrypoint_v1(&renderer_entrypoint, &renderer_target)?;
+    verify_entrypoint_v1(&worker_entrypoint, &worker_target)?;
 
+    fs::remove_file(&worker_entrypoint).map_err(|error| {
+        PackageErrorV1::io("worker activation entry point removal failed", error)
+    })?;
     fs::remove_file(&renderer_entrypoint)
         .map_err(|error| PackageErrorV1::io("renderer entry point removal failed", error))?;
     fs::remove_file(&codex_entrypoint)
@@ -128,6 +151,8 @@ pub fn uninstall_bundle_v1(options: &UninstallOptionsV1) -> Result<PathBuf, Pack
     remove_empty_directory_v1(&options.prefix.join(INSTALL_BASE_V1))?;
     remove_empty_directory_v1(&options.prefix.join("libexec"))?;
     remove_empty_directory_v1(&options.prefix.join("bin"))?;
+    remove_empty_directory_v1(&options.prefix.join("share/latex-render"))?;
+    remove_empty_directory_v1(&options.prefix.join("share"))?;
     Ok(reported_root)
 }
 
