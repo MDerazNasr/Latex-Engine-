@@ -3,12 +3,12 @@
 Render LaTeX mathematics automatically inside the Codex CLI instead of showing
 raw delimiters and commands.
 
-The independent renderer and Phase 2 terminal presentation core are implemented and
-under validation. They include a
-streaming Markdown-aware segmenter, supervised MathJax worker, fail-closed SVG
-boundary, deterministic PNG rasterizer, bounded cache, cell-aware layout, Kitty and
-iTerm2 presentation, capability detection, and the standalone `latex-render` CLI.
-Automatic Codex transcript integration remains a later phase.
+The independent renderer, terminal presentation core, and experimental Codex TUI
+integration are implemented. They include a streaming Markdown-aware segmenter,
+supervised MathJax worker, fail-closed SVG boundary, deterministic PNG rasterizer,
+bounded cache, cell-aware layout, Kitty, iTerm2, and Sixel presentation, capability
+detection, source-preserving transcript integration, and the standalone
+`latex-render` CLI.
 
 See [PROJECT_SPEC.md](PROJECT_SPEC.md) for the normative architecture, Codex
 integration strategy, security model, milestones, and acceptance criteria.
@@ -68,6 +68,37 @@ cargo run -p latex-cli -- render --display --format png --output equation.png '\
 
 Existing output files are preserved unless `--force` is explicit. Run
 `cargo run -p latex-cli -- render --help` for all bounded rendering options.
+
+## Experimental Codex build
+
+The versioned bundle keeps the experimental command separate from the normal
+`codex` command. It requires this renderer checkout and a clean Codex checkout that
+contains the Phase 3 integration commit `9bf8b63da2`:
+
+```sh
+cargo run -p codex-latex-package -- build \
+  --engine-root /absolute/path/to/Latex-Engine- \
+  --codex-checkout /absolute/path/to/codex-latex-integration \
+  --output /absolute/path/to/codex-latex-0.1.0-aarch64-apple-darwin \
+  --version 0.1.0
+```
+
+Install under an explicit prefix, validate the installed pipeline, and launch the
+experimental TUI:
+
+```sh
+cargo run -p codex-latex-package -- install \
+  --bundle /absolute/path/to/codex-latex-0.1.0-aarch64-apple-darwin \
+  --prefix /absolute/install/prefix
+
+/absolute/install/prefix/bin/latex-render check
+/absolute/install/prefix/bin/codex-latex
+```
+
+Inside Codex, `/math status` reports discovery and renderer health, while
+`/math source` reveals canonical LaTeX for copying. See
+[docs/codex-integration.md](docs/codex-integration.md) for the full installation,
+configuration, terminal support, troubleshooting, and rollback guide.
 
 ## Tests
 
