@@ -128,6 +128,11 @@ The rich transcript has a source toggle that invalidates active placements and
 immediately reflows the same stored Markdown. Raw transcript mode always shows source
 and never publishes equation images.
 
+The source free status report identifies renderer discovery as `configured`,
+`sibling`, or `path` without printing the resolved executable path. This distinction
+must be carried by the discovery result itself so diagnostics cannot guess from the
+final configuration after the original discovery inputs have been discarded.
+
 ## Reviewable implementation stages
 
 Each stage stays under the upstream 800-line review limit and receives focused tests
