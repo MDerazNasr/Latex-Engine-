@@ -18,7 +18,7 @@ local feature branches and the explicit `codex-latex` bundle described below.
 - Renderer repository branch: `feature/phase-3-codex-integration`.
 - Codex repository branch: `feature/latex-rendering-integration`.
 - Pinned upstream Codex base: `b68acc4d4b56fdfa1d5b6a2c36102c66876e0c46`.
-- Accepted Codex integration head: `460c176304`.
+- Accepted Codex integration head: `229d0cd2ae`.
 - Artifact: `dist/codex-latex-0.1.0-aarch64-apple-darwin`.
 - Artifact identity: version 0.1.0, target `aarch64-apple-darwin`, 367 MB, and
   1,254 manifest-hashed payload files.

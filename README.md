@@ -73,7 +73,7 @@ Existing output files are preserved unless `--force` is explicit. Run
 
 The versioned bundle keeps the experimental command separate from the normal
 `codex` command. It requires this renderer checkout and a clean Codex checkout that
-contains the final Phase 3 integration commit `460c176304`:
+contains the final Phase 3 integration commit `229d0cd2ae`:
 
 ```sh
 cargo run -p codex-latex-package -- build \

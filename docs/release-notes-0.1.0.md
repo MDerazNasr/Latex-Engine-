@@ -19,7 +19,7 @@ presentation for the interactive Codex CLI.
 
 The Codex adapter is based on upstream commit
 `b68acc4d4b56fdfa1d5b6a2c36102c66876e0c46` and ends at integration commit
-`460c176304`. Bundles require Node.js 22 or newer at runtime. Packaging currently
+`229d0cd2ae`. Bundles require Node.js 22 or newer at runtime. Packaging currently
 supports macOS and Linux; Windows packaging is deferred.
 
 Direct Kitty-family terminals and iTerm2 3.6 or newer receive rich images. Detected

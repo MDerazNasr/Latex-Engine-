@@ -1,6 +1,6 @@
 # Codex renderer source diagnostics production risks
 
-Feature commit: `460c176304`
+Feature commit: `229d0cd2ae`
 
 1. A missing executable, empty override, malformed path, or null discovery result could be mislabeled as a valid renderer source. The existing fail closed discovery result remains authoritative, and only successful configured, sibling, or `PATH` resolution constructs a typed source value.
 2. Environment, executable, or `PATH` state could change after startup and make a later status request appear to describe a new discovery decision. The immutable source value is captured with the resolved executable before controller startup and reused for the lifetime of that runtime generation.
