@@ -26,7 +26,8 @@ All three visible paths are symbolic links owned by one verified, versioned bund
 - Rust 1.85 or newer and Corepack when building from source.
 - A clean renderer checkout.
 - A clean Codex checkout containing pinned upstream commit
-  `b68acc4d4b56fdfa1d5b6a2c36102c66876e0c46` and integration commit `9bf8b63da2`.
+  `b68acc4d4b56fdfa1d5b6a2c36102c66876e0c46` and final integration commit
+  `460c176304`.
 - A supported direct terminal for images. Unsupported terminals still show source.
 
 The source builder uses frozen pnpm dependencies and locked Cargo builds. It refuses

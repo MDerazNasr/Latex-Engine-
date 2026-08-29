@@ -73,7 +73,7 @@ Existing output files are preserved unless `--force` is explicit. Run
 
 The versioned bundle keeps the experimental command separate from the normal
 `codex` command. It requires this renderer checkout and a clean Codex checkout that
-contains the Phase 3 integration commit `9bf8b63da2`:
+contains the final Phase 3 integration commit `460c176304`:
 
 ```sh
 cargo run -p codex-latex-package -- build \
@@ -98,7 +98,9 @@ cargo run -p codex-latex-package -- install \
 Inside Codex, `/math status` reports discovery and renderer health, while
 `/math source` reveals canonical LaTeX for copying. See
 [docs/codex-integration.md](docs/codex-integration.md) for the full installation,
-configuration, terminal support, troubleshooting, and rollback guide.
+configuration, terminal support, troubleshooting, and rollback guide. The exact
+release evidence and remaining experimental limits are recorded in
+[integrations/codex/phase-3-acceptance.md](integrations/codex/phase-3-acceptance.md).
 
 ## Tests
 
